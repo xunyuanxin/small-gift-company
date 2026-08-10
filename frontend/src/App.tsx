@@ -1,28 +1,16 @@
-import { useEffect, useState } from 'react'
-import { api } from './api/client'
-
-type BackendStatus = 'loading' | 'up' | 'down'
+import { Route, Routes } from 'react-router-dom'
+import { Container } from '@mui/material'
+import { GiftFinder } from './components/GiftFinder'
+import { BundleDetail } from './components/BundleDetail'
 
 function App() {
-  const [status, setStatus] = useState<BackendStatus>('loading')
-
-  useEffect(() => {
-    api
-      .get<{ status: string }>('/api/health')
-      .then(() => setStatus('up'))
-      .catch(() => setStatus('down'))
-  }, [])
-
   return (
-    <main style={{ fontFamily: 'sans-serif', padding: '2rem' }}>
-      <h1>Goodie Bag</h1>
-      <p data-testid="backend-status">
-        Backend:{' '}
-        {status === 'loading' && 'checking…'}
-        {status === 'up' && '✓ connected'}
-        {status === 'down' && '✗ unavailable'}
-      </p>
-    </main>
+    <Container maxWidth="lg" sx={{ py: 4 }}>
+      <Routes>
+        <Route path="/" element={<GiftFinder />} />
+        <Route path="/bundles/:id" element={<BundleDetail />} />
+      </Routes>
+    </Container>
   )
 }
 

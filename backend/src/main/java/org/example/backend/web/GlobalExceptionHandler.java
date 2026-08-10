@@ -1,5 +1,6 @@
 package org.example.backend.web;
 
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +35,19 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .reduce((a, b) -> a + "; " + b)
                 .orElse("Unknown validation error"));
         return ResponseEntity.status(status).body(pd);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ProblemDetail> handleConstraintViolation(ConstraintViolationException ex) {
+        String detail = ex.getConstraintViolations().stream()
+                .map(v -> v.getPropertyPath() + ": " + v.getMessage())
+                .sorted()
+                .collect(java.util.stream.Collectors.joining("; "));
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        pd.setType(URI.create("about:validation-error"));
+        pd.setTitle("Validation failed");
+        pd.setDetail(detail);
+        return ResponseEntity.badRequest().body(pd);
     }
 
     @ExceptionHandler(Exception.class)
