@@ -1,5 +1,5 @@
 # Phase 1 — Foundation
-
+2
 ## Goal
 
 Create a clean local development environment and a deployable skeleton before business features are added.
