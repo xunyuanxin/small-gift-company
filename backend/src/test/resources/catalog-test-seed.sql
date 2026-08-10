@@ -4,16 +4,23 @@ VALUES
     ('CRAYON-001',  'Mini Crayon Set',         '8-colour mini crayon set',         1.20, 300),
     ('PUTTY-001',   'Rainbow Silly Putty',     'Stretchy rainbow-coloured putty',  0.90, 400);
 
-INSERT INTO bundle (name, description, base_price, image_url)
+INSERT INTO bundle (name, description, base_price, image_url, active)
 VALUES
     ('Rainbow Fun Pack',
      'Stickers, crayons, and putty — perfect for ages 4-8.',
      8.99,
-     '/images/bundles/rainbow-fun-pack.jpg'),
+     '/images/bundles/rainbow-fun-pack.jpg',
+     true),
     ('Sticker Blast',
      'Double the stickers for sticker-obsessed kids.',
      5.99,
-     '/images/bundles/sticker-blast.jpg');
+     '/images/bundles/sticker-blast.jpg',
+     true),
+    ('Discontinued Pack',
+     'Old bundle no longer sold.',
+     4.99,
+     null,
+     false);
 
 INSERT INTO bundle_item (bundle_id, product_id, quantity_per_bundle)
 SELECT b.id, p.id, 1

@@ -18,14 +18,18 @@ public class BundleService {
     }
 
     public List<BundleDto> search(List<String> tags, BigDecimal maxPrice) {
-        boolean hasTags  = tags != null && !tags.isEmpty();
+        // Deduplicate before counting — duplicate tag values in the IN clause would make
+        // the correlated subquery COUNT mismatch the tagCount argument and return no results.
+        List<String> effectiveTags = (tags == null) ? List.of()
+                : tags.stream().distinct().toList();
+        boolean hasTags  = !effectiveTags.isEmpty();
         boolean hasPrice = maxPrice != null;
 
         List<Bundle> bundles;
         if (hasTags && hasPrice) {
-            bundles = repo.findActiveByAllTagsAndMaxPrice(tags, tags.size(), maxPrice);
+            bundles = repo.findActiveByAllTagsAndMaxPrice(effectiveTags, effectiveTags.size(), maxPrice);
         } else if (hasTags) {
-            bundles = repo.findActiveByAllTags(tags, tags.size());
+            bundles = repo.findActiveByAllTags(effectiveTags, effectiveTags.size());
         } else if (hasPrice) {
             bundles = repo.findActiveByMaxPrice(maxPrice);
         } else {

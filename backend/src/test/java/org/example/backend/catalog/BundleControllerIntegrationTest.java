@@ -41,11 +41,12 @@ class BundleControllerIntegrationTest {
 
     @Test
     void listBundles_excludesInactiveBundles() throws Exception {
-        // The seed SQL intentionally has no inactive bundles; the test verifies
-        // that the count is exactly what the seed provides, not more.
+        // Seed contains 3 bundles: 2 active + 1 inactive ("Discontinued Pack").
+        // The list must return exactly 2 and must not include the inactive one.
         mockMvc.perform(get("/api/bundles"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[*].name", not(hasItem("Inactive Bundle"))));
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[*].name", not(hasItem("Discontinued Pack"))));
     }
 
     @Test
@@ -129,13 +130,14 @@ class BundleControllerIntegrationTest {
 
     @Test
     void getDetail_returnsCorrectBundle() throws Exception {
-        // Retrieve listing first to get the real ID.
-        String body = mockMvc.perform(get("/api/bundles"))
+        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
                 .andReturn().getResponse().getContentAsString();
+        Integer id = com.jayway.jsonpath.JsonPath.parse(listBody).read("$[0].id");
 
-        // Parse the first id from the array using jsonPath on a fresh request.
-        mockMvc.perform(get("/api/bundles"))
-                .andExpect(jsonPath("$[0].id").isNumber());
+        mockMvc.perform(get("/api/bundles/" + id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name", is("Rainbow Fun Pack")))
+                .andExpect(jsonPath("$.basePrice", is(8.99)));
     }
 
     @Test
@@ -163,10 +165,9 @@ class BundleControllerIntegrationTest {
 
     @Test
     void getDetail_returns404ForInactiveBundle() throws Exception {
-        // Inactive bundles must not be accessible by ID either.
-        // Seed SQL ensures there are no inactive bundles by default;
-        // this test verifies an out-of-range id returns 404 consistently.
-        mockMvc.perform(get("/api/bundles/0"))
+        // Seed contains "Discontinued Pack" (active=false) inserted third, so id=3
+        // after RESTART IDENTITY. Direct access must return 404, not the bundle.
+        mockMvc.perform(get("/api/bundles/3"))
                 .andExpect(status().isNotFound());
     }
 
@@ -178,5 +179,37 @@ class BundleControllerIntegrationTest {
                 .andReturn().getResponse().getContentAsString();
         org.assertj.core.api.Assertions.assertThat(responseBody)
                 .doesNotContain("unitCost");
+    }
+
+    @Test
+    void detailResponse_doesNotLeakUnitCost() throws Exception {
+        // BundleDetailDto includes line items; unit cost must be absent there too.
+        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
+                .andReturn().getResponse().getContentAsString();
+        Integer id = com.jayway.jsonpath.JsonPath.parse(listBody).read("$[0].id");
+
+        String detail = mockMvc.perform(get("/api/bundles/" + id))
+                .andReturn().getResponse().getContentAsString();
+        org.assertj.core.api.Assertions.assertThat(detail)
+                .doesNotContain("unitCost");
+    }
+
+    @Test
+    void filterByDuplicateTags_treatedAsSingleTag() throws Exception {
+        // Sending the same tag twice must not produce an empty result set.
+        // The service deduplicates before passing tagCount to the subquery.
+        mockMvc.perform(get("/api/bundles")
+                        .param("tag", "age:4-8")
+                        .param("tag", "age:4-8"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(2)));
+    }
+
+    @Test
+    void filterByOverlengthTag_returns400() throws Exception {
+        // Individual tag values are capped at 50 characters.
+        String longTag = "x".repeat(51);
+        mockMvc.perform(get("/api/bundles").param("tag", longTag))
+                .andExpect(status().isBadRequest());
     }
 }

@@ -22,12 +22,14 @@ export function GiftFinder() {
     : undefined
 
   useEffect(() => {
+    let cancelled = false
     setLoading(true)
     setError(null)
     searchBundles(activeTags, maxPrice)
-      .then(setBundles)
-      .catch((e: { message?: string }) => setError(e.message ?? 'Failed to load bundles'))
-      .finally(() => setLoading(false))
+      .then((data) => { if (!cancelled) setBundles(data) })
+      .catch((e: { message?: string }) => { if (!cancelled) setError(e.message ?? 'Failed to load bundles') })
+      .finally(() => { if (!cancelled) setLoading(false) })
+    return () => { cancelled = true }
     // activeTags reference changes on every render; use the serialised string
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString()])
