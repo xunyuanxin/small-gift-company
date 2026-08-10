@@ -3,18 +3,31 @@
   <component name="ChangeListManager">
     <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="npm install locally">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/.claude/agent-memory/frontend-engineer/project_phase2_frontend.md" beforeDir="false" afterPath="$PROJECT_DIR$/backend/.claude/agent-memory/frontend-engineer/project_phase2_frontend.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/catalog-test-seed.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/resources/catalog-test-seed.sql" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Bundle.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleController.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleDetailDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItem.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItemDto.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleRepository.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/web/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/web/GlobalExceptionHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleServiceTest.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/App.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.test.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleDetail.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BundleDetail.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BundleGallery.test.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/BundleGallery.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/api/bundles.ts" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/api/client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/client.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleCard.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleDetail.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.test.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.tsx" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/main.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/main.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundlesPage.test.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundlesPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/types/catalog.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/catalog.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -47,7 +60,7 @@
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "git-widget-placeholder": "2-catalog-gift-finder",
+    "git-widget-placeholder": "2-catalog-filter-logic-change",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/chaoqu90/work/SmallGiftCompany",
     "settings.editor.selected.configurable": "preferences.lookFeel"
@@ -76,11 +89,20 @@
       <option name="project" value="LOCAL" />
       <updated>1786374850234</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="add close icon for filter chip">
+      <option name="closed" value="true" />
+      <created>1786385148021</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1786385148021</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="npm install locally" />
-    <option name="LAST_COMMIT_MESSAGE" value="npm install locally" />
+    <MESSAGE value="add close icon for filter chip" />
+    <option name="LAST_COMMIT_MESSAGE" value="add close icon for filter chip" />
   </component>
 </project>

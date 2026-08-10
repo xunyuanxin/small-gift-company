@@ -1,6 +1,7 @@
 package org.example.backend.web;
 
 import jakarta.validation.ConstraintViolationException;
+import org.example.backend.catalog.BundleGenerationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -48,6 +49,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         pd.setTitle("Validation failed");
         pd.setDetail(detail);
         return ResponseEntity.badRequest().body(pd);
+    }
+
+    @ExceptionHandler(BundleGenerationException.class)
+    public ResponseEntity<ProblemDetail> handleBundleGeneration(BundleGenerationException ex) {
+        ProblemDetail pd = ProblemDetail.forStatus(HttpStatus.UNPROCESSABLE_ENTITY);
+        pd.setType(java.net.URI.create("about:bundle-generation-error"));
+        pd.setTitle("Bundle generation failed");
+        pd.setDetail(ex.getDetail());
+        pd.setProperty("failureCode", ex.getCode().name());
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(pd);
     }
 
     @ExceptionHandler(Exception.class)

@@ -1,9 +1,22 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, afterEach } from 'vitest'
+import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material'
 import theme from '../theme'
 import { GiftFinder } from './GiftFinder'
+import * as generatedBundlesApi from '../api/generatedBundles'
+import type { GeneratedBundleResponse } from '../types/catalog'
+
+afterEach(() => vi.restoreAllMocks())
+
+const GENERATED_BUNDLE_STUB: GeneratedBundleResponse = {
+  generatedBundleId: 'gb_test123456',
+  templateCode: 'GENERAL_4_ITEM',
+  standardItemCogsSnapshot: 9.50,
+  items: [],
+  upgrade: null,
+  giftBag: { code: 'CLASSIC_BAG', name: 'Classic Party Bag', retailPriceAdjustment: null, isDefault: true },
+}
 
 function renderFinder() {
   return render(
@@ -11,27 +24,21 @@ function renderFinder() {
       <MemoryRouter initialEntries={['/']}>
         <Routes>
           <Route path="/" element={<GiftFinder />} />
-          <Route
-            path="/bundles"
-            element={<RecordNav />}
-          />
+          <Route path="/bundleCustomization/:bundleId" element={<div data-testid="configurator-page" />} />
         </Routes>
       </MemoryRouter>
     </ThemeProvider>,
   )
 }
 
-function RecordNav() {
-  // This component mounts when navigation succeeds to /bundles
-  return <div data-testid="bundles-page">bundles</div>
-}
-
-describe('GiftFinder compact panel', () => {
-  it('renders all three question sections', () => {
+describe('GiftFinder — layout', () => {
+  it('renders all five question sections', () => {
     renderFinder()
     expect(screen.getByText(/how old are they/i)).toBeInTheDocument()
     expect(screen.getByText(/what are they into/i)).toBeInTheDocument()
+    expect(screen.getByText(/girl or boy/i)).toBeInTheDocument()
     expect(screen.getByText(/what's the celebration/i)).toBeInTheDocument()
+    expect(screen.getByText('⑤ Budget?')).toBeInTheDocument()
   })
 
   it('renders the panel title', () => {
@@ -48,29 +55,47 @@ describe('GiftFinder compact panel', () => {
 
   it('renders interest chip options', () => {
     renderFinder()
-    expect(screen.getByText('🎨 Creative')).toBeInTheDocument()
-    expect(screen.getByText('🐾 Animals')).toBeInTheDocument()
-    expect(screen.getByText('🚀 Adventure')).toBeInTheDocument()
-    expect(screen.getByText('✨ Magical')).toBeInTheDocument()
-    expect(screen.getByText('⚽ Active')).toBeInTheDocument()
-    expect(screen.getByText('🎲 Games')).toBeInTheDocument()
+    expect(screen.getByText('🎵 Pop Music')).toBeInTheDocument()
+    expect(screen.getByText('🧸 Toys & Play')).toBeInTheDocument()
+    expect(screen.getByText('✨ Cute & Magical')).toBeInTheDocument()
+    expect(screen.getByText('⚽ Sports')).toBeInTheDocument()
+    expect(screen.getByText('📚 Reading & Puzzles')).toBeInTheDocument()
   })
 
-  it('renders occasion chip options', () => {
+  it('renders audience chip options', () => {
     renderFinder()
-    expect(screen.getByText('🎂 Birthday')).toBeInTheDocument()
-    expect(screen.getByText('🏫 School Party')).toBeInTheDocument()
+    expect(screen.getByText('Girl')).toBeInTheDocument()
+    expect(screen.getByText('Boy')).toBeInTheDocument()
+    expect(screen.getByText('No Preference')).toBeInTheDocument()
+  })
+
+  it('renders party type chip options', () => {
+    renderFinder()
     expect(screen.getByText('🎉 Celebration')).toBeInTheDocument()
-    expect(screen.getByText('🎁 Other')).toBeInTheDocument()
+    expect(screen.getByText('🎃 Halloween')).toBeInTheDocument()
   })
 
-  it('age chip is single-select: clicking selects, clicking same deselects', () => {
+  it('renders budget chip options', () => {
     renderFinder()
-    const chip68 = screen.getByText('6–8')
-    // Click to select
-    fireEvent.click(chip68)
-    // Click again to deselect — no error, panel still shows
-    fireEvent.click(chip68)
+    expect(screen.getByText('Budget-Friendly')).toBeInTheDocument()
+    expect(screen.getByText('Mid-Range')).toBeInTheDocument()
+    expect(screen.getByText('Premium')).toBeInTheDocument()
+  })
+
+  it('renders submit button with singular label', () => {
+    renderFinder()
+    expect(
+      screen.getByRole('button', { name: /show me their goodie bag →/i }),
+    ).toBeInTheDocument()
+  })
+})
+
+describe('GiftFinder — chip selection', () => {
+  it('age chip is single-select: clicking same chip deselects it', () => {
+    renderFinder()
+    const chip = screen.getByText('6–8')
+    fireEvent.click(chip)
+    fireEvent.click(chip)
     expect(screen.getByText('6–8')).toBeInTheDocument()
   })
 
@@ -78,48 +103,95 @@ describe('GiftFinder compact panel', () => {
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
     fireEvent.click(screen.getByText('9–12'))
-    // Panel still renders with both chips visible
     expect(screen.getByText('6–8')).toBeInTheDocument()
     expect(screen.getByText('9–12')).toBeInTheDocument()
   })
 
-  it('interest chips are multi-select: multiple can be selected', () => {
+  it('interest chip is single-select', () => {
     renderFinder()
-    fireEvent.click(screen.getByText('🎨 Creative'))
-    fireEvent.click(screen.getByText('🐾 Animals'))
-    // Both remain visible / panel still renders
-    expect(screen.getByText('🎨 Creative')).toBeInTheDocument()
-    expect(screen.getByText('🐾 Animals')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByText('⚽ Sports'))
+    expect(screen.getByText('🎵 Pop Music')).toBeInTheDocument()
+    expect(screen.getByText('⚽ Sports')).toBeInTheDocument()
   })
 
-  it('occasion chip is single-select', () => {
+  it('audience chip is single-select', () => {
     renderFinder()
-    fireEvent.click(screen.getByText('🎂 Birthday'))
+    fireEvent.click(screen.getByText('Girl'))
+    fireEvent.click(screen.getByText('Boy'))
+    expect(screen.getByText('Girl')).toBeInTheDocument()
+    expect(screen.getByText('Boy')).toBeInTheDocument()
+  })
+
+  it('party type chip is single-select', () => {
+    renderFinder()
     fireEvent.click(screen.getByText('🎉 Celebration'))
-    // Panel still renders — both visible
-    expect(screen.getByText('🎂 Birthday')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('🎃 Halloween'))
     expect(screen.getByText('🎉 Celebration')).toBeInTheDocument()
+    expect(screen.getByText('🎃 Halloween')).toBeInTheDocument()
   })
 
-  it('submit with no selections navigates to /bundles', () => {
+  it('budget chip is single-select', () => {
     renderFinder()
-    fireEvent.click(screen.getByText(/show me their goodie bags/i))
-    expect(screen.getByTestId('bundles-page')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('Budget-Friendly'))
+    fireEvent.click(screen.getByText('Premium'))
+    expect(screen.getByText('Budget-Friendly')).toBeInTheDocument()
+    expect(screen.getByText('Premium')).toBeInTheDocument()
   })
+})
 
-  it('submit with selections navigates to /bundles', () => {
+describe('GiftFinder — recommendation navigation', () => {
+  it('submit navigates to /bundleCustomization/:publicId after selecting age and interest', async () => {
+    vi.spyOn(generatedBundlesApi, 'generateBundle').mockResolvedValue(GENERATED_BUNDLE_STUB)
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
-    fireEvent.click(screen.getByText('🎨 Creative'))
-    fireEvent.click(screen.getByText('🎂 Birthday'))
-    fireEvent.click(screen.getByText(/show me their goodie bags/i))
-    expect(screen.getByTestId('bundles-page')).toBeInTheDocument()
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    await waitFor(() =>
+      expect(screen.getByTestId('configurator-page')).toBeInTheDocument(),
+    )
   })
 
-  it('renders submit button', () => {
+  it('shows error when age/interest not selected and submit is clicked', async () => {
     renderFinder()
-    expect(
-      screen.getByRole('button', { name: /show me their goodie bags/i }),
-    ).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByRole('alert')).toHaveTextContent(/please select an age range and an interest/i)
+  })
+
+  it('shows error when age is selected but interest is not', async () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByRole('alert')).toHaveTextContent(/please select an age range and an interest/i)
+  })
+
+  it('shows error message when API call fails', async () => {
+    vi.spyOn(generatedBundlesApi, 'generateBundle').mockRejectedValue(new Error('Network error'))
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    expect(screen.getByRole('alert')).toHaveTextContent(/something went wrong/i)
+  })
+
+  it('defaults audiencePreference, partyType, and budgetTierCode when not selected', async () => {
+    const spy = vi.spyOn(generatedBundlesApi, 'generateBundle').mockResolvedValue(GENERATED_BUNDLE_STUB)
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    await waitFor(() =>
+      expect(screen.getByTestId('configurator-page')).toBeInTheDocument(),
+    )
+    expect(spy).toHaveBeenCalledWith({
+      age: 7,
+      interest: 'POP_MUSIC',
+      audiencePreference: 'NO_PREFERENCE',
+      partyType: 'CELEBRATION',
+      budgetTierCode: 'MID',
+    })
   })
 })

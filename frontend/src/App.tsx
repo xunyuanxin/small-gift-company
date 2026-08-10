@@ -1,14 +1,12 @@
 import { Route, Routes } from 'react-router-dom'
-import { HomePage }    from './pages/HomePage'
-import { BundlesPage } from './pages/BundlesPage'
-import { BundleDetail } from './components/BundleDetail'
+import { HomePage }                from './pages/HomePage'
+import { BundleCustomizationPage } from './pages/BundleCustomizationPage'
 
 function App() {
   return (
     <Routes>
-      <Route path="/"            element={<HomePage />} />
-      <Route path="/bundles"     element={<BundlesPage />} />
-      <Route path="/bundles/:id" element={<BundleDetail />} />
+      <Route path="/"                          element={<HomePage />} />
+      <Route path="/bundleCustomization/:bundleId" element={<BundleCustomizationPage />} />
     </Routes>
   )
 }
