@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { api } from './client'
-import type { ApiError } from './client'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -45,7 +44,7 @@ describe('api.get — error responses', () => {
       statusText: 'Bad Request',
       json: () => Promise.resolve({ detail: 'name: must not be blank' }),
     })
-    await expect(api.get('/any')).rejects.toMatchObject<ApiError>({
+    await expect(api.get('/any')).rejects.toMatchObject({
       status: 400,
       message: 'name: must not be blank',
     })
@@ -59,7 +58,7 @@ describe('api.get — error responses', () => {
       statusText: 'Service Unavailable',
       json: () => Promise.resolve({ title: 'Unexpected shape' }),
     })
-    await expect(api.get('/any')).rejects.toMatchObject<ApiError>({
+    await expect(api.get('/any')).rejects.toMatchObject({
       status: 503,
       message: 'Service Unavailable',
     })
@@ -73,7 +72,7 @@ describe('api.get — error responses', () => {
       statusText: 'Bad Gateway',
       json: () => Promise.reject(new SyntaxError('Unexpected token')),
     })
-    await expect(api.get('/any')).rejects.toMatchObject<ApiError>({
+    await expect(api.get('/any')).rejects.toMatchObject({
       status: 502,
       message: 'Bad Gateway',
     })
@@ -86,7 +85,7 @@ describe('api.get — error responses', () => {
       statusText: 'Gateway Timeout',
       json: () => Promise.reject(new SyntaxError('empty')),
     })
-    await expect(api.get('/any')).rejects.toMatchObject<ApiError>({
+    await expect(api.get('/any')).rejects.toMatchObject({
       status: 504,
       message: 'Gateway Timeout',
     })
