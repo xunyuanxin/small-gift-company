@@ -191,12 +191,14 @@ export function BundlesPage() {
                 key={tag}
                 label={tagLabel(tag)}
                 size="small"
+                onDelete={(e) => { e.stopPropagation(); toggleTag(tag) }}
+                onClick={(e) => e.stopPropagation()}
                 sx={{
                   backgroundColor: COLORS.coral,
                   color: '#FFFFFF',
                   height: 24,
                   fontSize: '0.75rem',
-                  pointerEvents: 'none', // clicks handled by the bar itself
+                  '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem' },
                 }}
               />
             ))}
@@ -205,12 +207,19 @@ export function BundlesPage() {
               <Chip
                 label={`Up to $${maxPrice}`}
                 size="small"
+                onDelete={(e) => {
+                  e.stopPropagation()
+                  const next = new URLSearchParams(searchParams)
+                  next.delete('maxPrice')
+                  setSearchParams(next)
+                }}
+                onClick={(e) => e.stopPropagation()}
                 sx={{
                   backgroundColor: COLORS.coral,
                   color: '#FFFFFF',
                   height: 24,
                   fontSize: '0.75rem',
-                  pointerEvents: 'none',
+                  '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem' },
                 }}
               />
             )}
