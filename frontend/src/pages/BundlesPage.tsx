@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
-  Box, Button, Chip, Container, FormControl, Grid2,
+  Box, Button, Chip, Container, Fade, FormControl, Grid2,
   MenuItem, Select, Skeleton, Stack, Typography,
 } from '@mui/material'
 import type { SelectChangeEvent } from '@mui/material'
@@ -10,29 +10,37 @@ import type { BundleDto } from '../types/catalog'
 import { BundleGallery } from '../components/BundleGallery'
 import { COLORS } from '../theme'
 
-// ── Tag display labels ───────────────────────────────────────────────────────
+// ── Tag option definitions ───────────────────────────────────────────────────
 
-const TAG_LABELS: Record<string, string> = {
-  'age:3-5':              '3–5',
-  'age:6-8':              '6–8',
-  'age:9-12':             '9–12',
-  'interest:creative':    '🎨 Creative',
-  'interest:animals':     '🐾 Animals',
-  'interest:adventure':   '🚀 Adventure',
-  'interest:magical':     '✨ Magical',
-  'interest:active':      '⚽ Active',
-  'interest:games':       '🎲 Games',
-  'party:birthday':       '🎂 Birthday',
-  'party:school':         '🏫 School Party',
-  'party:celebration':    '🎉 Celebration',
-  'party:other':          '🎁 Other',
-}
+const AGE_OPTIONS = [
+  { tag: 'age:3-5',  label: '3–5' },
+  { tag: 'age:6-8',  label: '6–8' },
+  { tag: 'age:9-12', label: '9–12' },
+]
 
-function tagLabel(tag: string): string {
-  return TAG_LABELS[tag] ?? tag
-}
+const INTEREST_OPTIONS = [
+  { tag: 'interest:creative',  label: '🎨 Creative' },
+  { tag: 'interest:animals',   label: '🐾 Animals' },
+  { tag: 'interest:adventure', label: '🚀 Adventure' },
+  { tag: 'interest:magical',   label: '✨ Magical' },
+  { tag: 'interest:active',    label: '⚽ Active' },
+  { tag: 'interest:games',     label: '🎲 Games' },
+]
+
+const OCCASION_OPTIONS = [
+  { tag: 'party:birthday',    label: '🎂 Birthday' },
+  { tag: 'party:school',      label: '🏫 School Party' },
+  { tag: 'party:celebration', label: '🎉 Celebration' },
+  { tag: 'party:other',       label: '🎁 Other' },
+]
+
+const ALL_OPTIONS = [...AGE_OPTIONS, ...INTEREST_OPTIONS, ...OCCASION_OPTIONS]
 
 const MAX_PRICE_OPTIONS = [5, 10, 15, 20, 30]
+
+function tagLabel(tag: string): string {
+  return ALL_OPTIONS.find((o) => o.tag === tag)?.label ?? tag
+}
 
 // ── Component ────────────────────────────────────────────────────────────────
 
@@ -42,6 +50,10 @@ export function BundlesPage() {
   const [loading,      setLoading]      = useState(true)
   const [error,        setError]        = useState<string | null>(null)
   const [retryCount,   setRetryCount]   = useState(0)
+
+  // Filter panel open state — hover on desktop, tap on mobile
+  const [panelOpen,  setPanelOpen]  = useState(false)
+  const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const activeTags = searchParams.getAll('tag')
   const maxPrice   = searchParams.get('maxPrice') ? Number(searchParams.get('maxPrice')) : undefined
@@ -61,21 +73,35 @@ export function BundlesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams.toString(), retryCount])
 
-  // ── Filter helpers ─────────────────────────────────────────────────────────
+  // ── Filter panel hover/tap helpers ─────────────────────────────────────────
 
-  function removeTag(tag: string) {
+  function keepOpen() {
+    if (closeTimer.current) clearTimeout(closeTimer.current)
+    setPanelOpen(true)
+  }
+
+  function scheduleClose() {
+    closeTimer.current = setTimeout(() => setPanelOpen(false), 150)
+  }
+
+  // ── Filter value helpers ────────────────────────────────────────────────────
+
+  function toggleTag(tag: string) {
     const next = new URLSearchParams(searchParams)
-    const remaining = next.getAll('tag').filter((t) => t !== tag)
+    const current = next.getAll('tag')
     next.delete('tag')
-    remaining.forEach((t) => next.append('tag', t))
+    if (current.includes(tag)) {
+      current.filter((t) => t !== tag).forEach((t) => next.append('tag', t))
+    } else {
+      current.forEach((t) => next.append('tag', t))
+      next.append('tag', tag)
+    }
     setSearchParams(next)
   }
 
   function removeLastTag() {
     const tags = searchParams.getAll('tag')
-    if (tags.length > 0) {
-      removeTag(tags[tags.length - 1])
-    }
+    if (tags.length > 0) toggleTag(tags[tags.length - 1])
   }
 
   function clearAll() {
@@ -87,6 +113,34 @@ export function BundlesPage() {
     if (e.target.value) next.set('maxPrice', e.target.value)
     else next.delete('maxPrice')
     setSearchParams(next)
+  }
+
+  // ── Shared chip row (used inside the dropdown panel) ────────────────────────
+
+  function FilterChipRow({
+    label,
+    options,
+  }: {
+    label: string
+    options: { tag: string; label: string }[]
+  }) {
+    return (
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center" mb={1.5}>
+        <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 600, minWidth: 64 }}>
+          {label}
+        </Typography>
+        {options.map(({ tag, label: chipLabel }) => (
+          <Chip
+            key={tag}
+            label={chipLabel}
+            onClick={() => toggleTag(tag)}
+            variant={activeTags.includes(tag) ? 'filled' : 'outlined'}
+            color={activeTags.includes(tag) ? 'primary' : 'default'}
+            sx={{ borderColor: activeTags.includes(tag) ? undefined : COLORS.border, cursor: 'pointer' }}
+          />
+        ))}
+      </Stack>
+    )
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
@@ -103,70 +157,129 @@ export function BundlesPage() {
           Goodie Bags for You ✨
         </Typography>
 
-        {/* Filters row */}
-        <Stack
-          direction={{ xs: 'column', sm: 'row' }}
-          spacing={1}
-          flexWrap="wrap"
-          useFlexGap
-          alignItems={{ sm: 'center' }}
-          sx={{ mb: 2 }}
-        >
-          {activeTags.map((tag) => (
-            <Chip
-              key={tag}
-              label={tagLabel(tag)}
-              onDelete={() => removeTag(tag)}
+        {/* ── Filter section ─────────────────────────────────────────────────── */}
+        <Box sx={{ position: 'relative', mb: 3 }}>
+
+          {/* Collapsed bar — always visible */}
+          <Stack
+            direction="row"
+            flexWrap="wrap"
+            useFlexGap
+            alignItems="center"
+            spacing={1}
+            onMouseEnter={keepOpen}
+            onMouseLeave={scheduleClose}
+            onClick={() => setPanelOpen((p) => !p)}
+            data-testid="filter-bar"
+            sx={{
+              backgroundColor: '#FFFFFF',
+              border: `1px solid ${COLORS.border}`,
+              borderRadius: '12px',
+              px: 2,
+              py: 1,
+              minHeight: 44,
+              cursor: 'pointer',
+              userSelect: 'none',
+            }}
+          >
+            <Typography variant="caption" sx={{ fontWeight: 600, color: COLORS.muted }}>
+              Filters {panelOpen ? '▴' : '▾'}
+            </Typography>
+
+            {activeTags.map((tag) => (
+              <Chip
+                key={tag}
+                label={tagLabel(tag)}
+                size="small"
+                sx={{
+                  backgroundColor: COLORS.coral,
+                  color: '#FFFFFF',
+                  height: 24,
+                  fontSize: '0.75rem',
+                  pointerEvents: 'none', // clicks handled by the bar itself
+                }}
+              />
+            ))}
+
+            {maxPrice !== undefined && (
+              <Chip
+                label={`Up to $${maxPrice}`}
+                size="small"
+                sx={{
+                  backgroundColor: COLORS.coral,
+                  color: '#FFFFFF',
+                  height: 24,
+                  fontSize: '0.75rem',
+                  pointerEvents: 'none',
+                }}
+              />
+            )}
+
+            {!hasFilters && (
+              <Typography variant="caption" sx={{ color: COLORS.muted }}>
+                Tap to add filters
+              </Typography>
+            )}
+
+            {hasFilters && (
+              <Button
+                variant="text"
+                size="small"
+                onClick={(e) => { e.stopPropagation(); clearAll() }}
+                sx={{ color: COLORS.muted, fontSize: '0.75rem', minHeight: 0, px: 1, ml: 'auto' }}
+              >
+                Clear all
+              </Button>
+            )}
+          </Stack>
+
+          {/* Expanded panel — overlays bundle cards, appears on hover/tap */}
+          <Fade in={panelOpen}>
+            <Box
+              onMouseEnter={keepOpen}
+              onMouseLeave={scheduleClose}
+              onClick={(e) => e.stopPropagation()} // prevent bar's toggle from firing
+              data-testid="filter-panel"
               sx={{
-                backgroundColor: COLORS.coral,
-                color: '#FFFFFF',
-                '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.8)' },
+                position: 'absolute',
+                top: 'calc(100% + 4px)',
+                left: 0,
+                right: 0,
+                zIndex: 100,
+                backgroundColor: '#FFFFFF',
+                border: `1px solid ${COLORS.border}`,
+                borderRadius: '16px',
+                p: { xs: 2, sm: 3 },
+                boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
               }}
-            />
-          ))}
-
-          {maxPrice !== undefined && (
-            <Chip
-              label={`Up to $${maxPrice}`}
-              onDelete={() => {
-                const next = new URLSearchParams(searchParams)
-                next.delete('maxPrice')
-                setSearchParams(next)
-              }}
-              sx={{
-                backgroundColor: COLORS.coral,
-                color: '#FFFFFF',
-                '& .MuiChip-deleteIcon': { color: 'rgba(255,255,255,0.8)' },
-              }}
-            />
-          )}
-
-          <FormControl size="small" sx={{ minWidth: 140 }}>
-            <Select
-              value={maxPrice !== undefined ? String(maxPrice) : ''}
-              onChange={handleMaxPrice}
-              displayEmpty
-              renderValue={(v) => (v ? `Up to $${v}` : 'Any price')}
-              sx={{ borderRadius: 9999, fontSize: '0.875rem' }}
             >
-              <MenuItem value="">Any price</MenuItem>
-              {MAX_PRICE_OPTIONS.map((p) => (
-                <MenuItem key={p} value={String(p)}>Up to ${p}</MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+              <FilterChipRow label="Age"      options={AGE_OPTIONS}      />
+              <FilterChipRow label="Interest" options={INTEREST_OPTIONS} />
+              <FilterChipRow label="Occasion" options={OCCASION_OPTIONS} />
 
-          {hasFilters && (
-            <Button
-              variant="text"
-              size="small"
-              onClick={clearAll}
-              sx={{ color: COLORS.muted, fontSize: '0.875rem', minHeight: 36 }}
-            >
-              Clear all
-            </Button>
-          )}
-        </Stack>
+              {/* Price + Clear all */}
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap alignItems="center">
+                <Typography variant="caption" sx={{ color: COLORS.muted, fontWeight: 600, minWidth: 64 }}>
+                  Price
+                </Typography>
+                <FormControl size="small" sx={{ minWidth: 140 }}>
+                  <Select
+                    value={maxPrice !== undefined ? String(maxPrice) : ''}
+                    onChange={handleMaxPrice}
+                    displayEmpty
+                    renderValue={(v) => (v ? `Up to $${v}` : 'Any price')}
+                    sx={{ borderRadius: 9999, fontSize: '0.875rem' }}
+                  >
+                    <MenuItem value="">Any price</MenuItem>
+                    {MAX_PRICE_OPTIONS.map((p) => (
+                      <MenuItem key={p} value={String(p)}>Up to ${p}</MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Stack>
+            </Box>
+          </Fade>
+        </Box>
 
         {/* Result count */}
         {!loading && !error && (
@@ -197,9 +310,7 @@ export function BundlesPage() {
             <Typography variant="h5" sx={{ color: COLORS.charcoal, mb: 1 }}>
               We couldn't load the goodies right now.
             </Typography>
-            <Typography sx={{ color: COLORS.muted, mb: 3 }}>
-              Please try again.
-            </Typography>
+            <Typography sx={{ color: COLORS.muted, mb: 3 }}>Please try again.</Typography>
             <Button
               variant="contained"
               onClick={() => setRetryCount((c) => c + 1)}
