@@ -66,14 +66,15 @@ describe('BundlesPage', () => {
     )
   })
 
-  it('Surprise Me clears all filters (navigates to /bundles with no params)', async () => {
+  it('Surprise Me clears active filters and re-fetches with no params', async () => {
     vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([])
     renderPage('/bundles?tag=party%3Abirthday')
     await waitFor(() => expect(screen.getByTestId('empty-state')).toBeInTheDocument())
     fireEvent.click(screen.getByTestId('surprise-me'))
-    // After clearing, the page re-fetches with no params — empty state or results shown
+    // All option chips remain visible (they are always shown), but "Clear all" should
+    // disappear because no filters are active anymore.
     await waitFor(() =>
-      expect(screen.queryByText('🎂 Birthday')).not.toBeInTheDocument(),
+      expect(screen.queryByRole('button', { name: /clear all/i })).not.toBeInTheDocument(),
     )
   })
 
