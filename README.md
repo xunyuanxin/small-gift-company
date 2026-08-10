@@ -59,7 +59,7 @@ cd backend
 ### Frontend
 
 ```bash
-cd frontend/frontend
+cd frontend
 npm test
 ```
 
