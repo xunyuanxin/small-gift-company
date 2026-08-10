@@ -68,6 +68,16 @@ class BundleServiceTest {
                 List.of("age:4-8", "interest:art"), 2L, new BigDecimal("15.00"));
     }
 
+    @Test
+    void search_duplicateTags_deduplicatedBeforeQuery() {
+        // Passing the same tag twice must not inflate tagCount — duplicates are stripped
+        // before the correlated subquery count is computed.
+        when(repo.findActiveByAllTags(any(), anyLong())).thenReturn(Collections.emptyList());
+        service.search(List.of("age:4-8", "age:4-8"), null);
+        // Must be called with deduplicated list (size 1), not the raw list (size 2).
+        verify(repo).findActiveByAllTags(List.of("age:4-8"), 1L);
+    }
+
     // ── getDetail ─────────────────────────────────────────────────────────────
 
     @Test

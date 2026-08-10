@@ -30,7 +30,7 @@ public class BundleController {
     public ResponseEntity<List<BundleDto>> search(
             @RequestParam(required = false)
             @Size(max = 10, message = "At most 10 tags may be supplied")
-            List<String> tag,
+            List<@Size(max = 50, message = "Each tag must be 50 characters or fewer") String> tag,
 
             @RequestParam(required = false)
             @DecimalMin(value = "0.01", message = "maxPrice must be greater than zero")

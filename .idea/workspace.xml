@@ -1,8 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/frontend/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/package-lock.json" afterDir="false" />
+    <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="npm install locally">
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleController.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleController.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItemDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItemDto.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/catalog-test-seed.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/resources/catalog-test-seed.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +62,19 @@
       <option name="presentableId" value="Default" />
       <updated>1786363291529</updated>
     </task>
+    <task id="LOCAL-00001" summary="npm install locally">
+      <option name="closed" value="true" />
+      <created>1786374850234</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1786374850234</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="npm install locally" />
+    <option name="LAST_COMMIT_MESSAGE" value="npm install locally" />
   </component>
 </project>
