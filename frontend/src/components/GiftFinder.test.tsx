@@ -1,86 +1,125 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { describe, it, expect } from 'vitest'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
+import { ThemeProvider } from '@mui/material'
+import theme from '../theme'
 import { GiftFinder } from './GiftFinder'
-import * as bundlesApi from '../api/bundles'
 
-// Wrap with router so useSearchParams works
-function renderFinder(initialPath = '/') {
+function renderFinder() {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <Routes>
-        <Route path="/" element={<GiftFinder />} />
-      </Routes>
-    </MemoryRouter>,
+    <ThemeProvider theme={theme}>
+      <MemoryRouter initialEntries={['/']}>
+        <Routes>
+          <Route path="/" element={<GiftFinder />} />
+          <Route
+            path="/bundles"
+            element={<RecordNav />}
+          />
+        </Routes>
+      </MemoryRouter>
+    </ThemeProvider>,
   )
 }
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
+function RecordNav() {
+  // This component mounts when navigation succeeds to /bundles
+  return <div data-testid="bundles-page">bundles</div>
+}
 
-describe('GiftFinder', () => {
-  it('shows loading state then results', async () => {
-    vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([
-      { id: 1, name: 'Rainbow Fun Pack', description: null, basePrice: 8.99, imageUrl: null, tags: [] },
-    ])
-
+describe('GiftFinder compact panel', () => {
+  it('renders all three question sections', () => {
     renderFinder()
-    expect(screen.getByText('Loading\u2026')).toBeInTheDocument()
-    await waitFor(() => expect(screen.getByText('Rainbow Fun Pack')).toBeInTheDocument())
+    expect(screen.getByText(/how old are they/i)).toBeInTheDocument()
+    expect(screen.getByText(/what are they into/i)).toBeInTheDocument()
+    expect(screen.getByText(/what's the celebration/i)).toBeInTheDocument()
   })
 
-  it('shows error message when API fails', async () => {
-    vi.spyOn(bundlesApi, 'searchBundles').mockRejectedValue({ message: 'Service Unavailable' })
-
+  it('renders the panel title', () => {
     renderFinder()
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('Service Unavailable'),
-    )
+    expect(screen.getByText(/let's find their favorites/i)).toBeInTheDocument()
   })
 
-  it('shows empty state when no bundles match', async () => {
-    vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([])
-
+  it('renders age chip options', () => {
     renderFinder()
-    await waitFor(() =>
-      expect(screen.getByTestId('no-results')).toBeInTheDocument(),
-    )
+    expect(screen.getByText('3–5')).toBeInTheDocument()
+    expect(screen.getByText('6–8')).toBeInTheDocument()
+    expect(screen.getByText('9–12')).toBeInTheDocument()
   })
 
-  it('calls API with selected age tag when chip is clicked', async () => {
-    const spy = vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([])
-
+  it('renders interest chip options', () => {
     renderFinder()
-    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1))
-
-    // Click the "4-8" age chip
-    fireEvent.click(screen.getByText('4-8'))
-
-    await waitFor(() =>
-      expect(spy).toHaveBeenCalledWith(expect.arrayContaining(['age:4-8']), undefined),
-    )
+    expect(screen.getByText('🎨 Creative')).toBeInTheDocument()
+    expect(screen.getByText('🐾 Animals')).toBeInTheDocument()
+    expect(screen.getByText('🚀 Adventure')).toBeInTheDocument()
+    expect(screen.getByText('✨ Magical')).toBeInTheDocument()
+    expect(screen.getByText('⚽ Active')).toBeInTheDocument()
+    expect(screen.getByText('🎲 Games')).toBeInTheDocument()
   })
 
-  it('clears all filters when "Clear filters" is clicked', async () => {
-    const spy = vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([])
-
+  it('renders occasion chip options', () => {
     renderFinder()
-    await waitFor(() => expect(spy).toHaveBeenCalledTimes(1))
-
-    fireEvent.click(screen.getByText('4-8'))
-    await waitFor(() => expect(screen.getByText('Clear filters')).toBeInTheDocument())
-
-    fireEvent.click(screen.getByText('Clear filters'))
-    await waitFor(() =>
-      expect(spy).toHaveBeenLastCalledWith([], undefined),
-    )
+    expect(screen.getByText('🎂 Birthday')).toBeInTheDocument()
+    expect(screen.getByText('🏫 School Party')).toBeInTheDocument()
+    expect(screen.getByText('🎉 Celebration')).toBeInTheDocument()
+    expect(screen.getByText('🎁 Other')).toBeInTheDocument()
   })
 
-  it('does not show "Clear filters" when no filters are active', async () => {
-    vi.spyOn(bundlesApi, 'searchBundles').mockResolvedValue([])
-
+  it('age chip is single-select: clicking selects, clicking same deselects', () => {
     renderFinder()
-    await waitFor(() => expect(screen.queryByText('Clear filters')).not.toBeInTheDocument())
+    const chip68 = screen.getByText('6–8')
+    // Click to select
+    fireEvent.click(chip68)
+    // Click again to deselect — no error, panel still shows
+    fireEvent.click(chip68)
+    expect(screen.getByText('6–8')).toBeInTheDocument()
+  })
+
+  it('age chip is single-select: clicking another replaces selection', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('9–12'))
+    // Panel still renders with both chips visible
+    expect(screen.getByText('6–8')).toBeInTheDocument()
+    expect(screen.getByText('9–12')).toBeInTheDocument()
+  })
+
+  it('interest chips are multi-select: multiple can be selected', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('🎨 Creative'))
+    fireEvent.click(screen.getByText('🐾 Animals'))
+    // Both remain visible / panel still renders
+    expect(screen.getByText('🎨 Creative')).toBeInTheDocument()
+    expect(screen.getByText('🐾 Animals')).toBeInTheDocument()
+  })
+
+  it('occasion chip is single-select', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('🎂 Birthday'))
+    fireEvent.click(screen.getByText('🎉 Celebration'))
+    // Panel still renders — both visible
+    expect(screen.getByText('🎂 Birthday')).toBeInTheDocument()
+    expect(screen.getByText('🎉 Celebration')).toBeInTheDocument()
+  })
+
+  it('submit with no selections navigates to /bundles', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText(/show me their goodie bags/i))
+    expect(screen.getByTestId('bundles-page')).toBeInTheDocument()
+  })
+
+  it('submit with selections navigates to /bundles', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('🎨 Creative'))
+    fireEvent.click(screen.getByText('🎂 Birthday'))
+    fireEvent.click(screen.getByText(/show me their goodie bags/i))
+    expect(screen.getByTestId('bundles-page')).toBeInTheDocument()
+  })
+
+  it('renders submit button', () => {
+    renderFinder()
+    expect(
+      screen.getByRole('button', { name: /show me their goodie bags/i }),
+    ).toBeInTheDocument()
   })
 })

@@ -1,16 +1,15 @@
 import { Route, Routes } from 'react-router-dom'
-import { Container } from '@mui/material'
-import { GiftFinder } from './components/GiftFinder'
+import { HomePage }    from './pages/HomePage'
+import { BundlesPage } from './pages/BundlesPage'
 import { BundleDetail } from './components/BundleDetail'
 
 function App() {
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Routes>
-        <Route path="/" element={<GiftFinder />} />
-        <Route path="/bundles/:id" element={<BundleDetail />} />
-      </Routes>
-    </Container>
+    <Routes>
+      <Route path="/"            element={<HomePage />} />
+      <Route path="/bundles"     element={<BundlesPage />} />
+      <Route path="/bundles/:id" element={<BundleDetail />} />
+    </Routes>
   )
 }
 

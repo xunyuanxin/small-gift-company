@@ -37,11 +37,11 @@ WHERE  b.name = 'Sticker Blast'
 INSERT INTO bundle_tag (bundle_id, tag)
 SELECT id, tag
 FROM   bundle
-CROSS JOIN (VALUES ('age:4-8'), ('interest:art'), ('interest:crafts')) AS t(tag)
+CROSS JOIN (VALUES ('age:6-8'), ('interest:creative'), ('interest:animals'), ('party:birthday')) AS t(tag)
 WHERE  name = 'Rainbow Fun Pack';
 
 INSERT INTO bundle_tag (bundle_id, tag)
 SELECT id, tag
 FROM   bundle
-CROSS JOIN (VALUES ('age:4-8'), ('interest:art')) AS t(tag)
+CROSS JOIN (VALUES ('age:6-8'), ('interest:creative'), ('party:birthday'), ('party:halloween')) AS t(tag)
 WHERE  name = 'Sticker Blast';
