@@ -51,8 +51,8 @@ class BundleControllerIntegrationTest {
 
     @Test
     void filterByTag_returnsOnlyMatchingBundles() throws Exception {
-        // 'interest:crafts' tag belongs to Rainbow Fun Pack only.
-        mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
+        // 'interest:animals' tag belongs to Rainbow Fun Pack only.
+        mockMvc.perform(get("/api/bundles").param("tag", "interest:animals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("Rainbow Fun Pack")));
@@ -60,10 +60,10 @@ class BundleControllerIntegrationTest {
 
     @Test
     void filterByMultipleTags_andSemantics() throws Exception {
-        // Both bundles have 'age:4-8' and 'interest:art'; only Rainbow Fun Pack also has 'interest:crafts'.
+        // Both bundles have 'age:6-8' and 'interest:creative'; only Rainbow Fun Pack also has 'interest:animals'.
         mockMvc.perform(get("/api/bundles")
-                        .param("tag", "age:4-8")
-                        .param("tag", "interest:crafts"))
+                        .param("tag", "age:6-8")
+                        .param("tag", "interest:animals"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].name", is("Rainbow Fun Pack")));
@@ -80,9 +80,9 @@ class BundleControllerIntegrationTest {
 
     @Test
     void filterByTagAndPrice_combinedFilter() throws Exception {
-        // 'interest:art' matches both; maxPrice=6 narrows it to Sticker Blast.
+        // 'interest:creative' matches both; maxPrice=6 narrows it to Sticker Blast.
         mockMvc.perform(get("/api/bundles")
-                        .param("tag", "interest:art")
+                        .param("tag", "interest:creative")
                         .param("maxPrice", "6.00"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(1)))
@@ -130,7 +130,7 @@ class BundleControllerIntegrationTest {
 
     @Test
     void getDetail_returnsCorrectBundle() throws Exception {
-        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
+        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:animals"))
                 .andReturn().getResponse().getContentAsString();
         Integer id = com.jayway.jsonpath.JsonPath.parse(listBody).read("$[0].id");
 
@@ -143,7 +143,7 @@ class BundleControllerIntegrationTest {
     @Test
     void getDetail_includesLineItems() throws Exception {
         // Get Rainbow Fun Pack id from list, then detail.
-        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
+        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:animals"))
                 .andReturn().getResponse().getContentAsString();
 
         // Use JSONPath to extract id — parse manually.
@@ -184,7 +184,7 @@ class BundleControllerIntegrationTest {
     @Test
     void detailResponse_doesNotLeakUnitCost() throws Exception {
         // BundleDetailDto includes line items; unit cost must be absent there too.
-        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:crafts"))
+        String listBody = mockMvc.perform(get("/api/bundles").param("tag", "interest:animals"))
                 .andReturn().getResponse().getContentAsString();
         Integer id = com.jayway.jsonpath.JsonPath.parse(listBody).read("$[0].id");
 
@@ -199,8 +199,8 @@ class BundleControllerIntegrationTest {
         // Sending the same tag twice must not produce an empty result set.
         // The service deduplicates before passing tagCount to the subquery.
         mockMvc.perform(get("/api/bundles")
-                        .param("tag", "age:4-8")
-                        .param("tag", "age:4-8"))
+                        .param("tag", "age:6-8")
+                        .param("tag", "age:6-8"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)));
     }

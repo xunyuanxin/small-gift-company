@@ -1,135 +1,161 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
-import { Box, Button, Chip, FormControl, InputLabel, MenuItem, Select, Stack, Typography } from '@mui/material'
-import type { SelectChangeEvent } from '@mui/material'
-import { searchBundles } from '../api/bundles'
-import type { BundleDto } from '../types/catalog'
-import { BundleGallery } from './BundleGallery'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Box, Button, Chip, Stack, Typography } from '@mui/material'
+import { COLORS } from '../theme'
 
-const AGE_OPTIONS = ['age:0-3', 'age:4-8', 'age:9-12']
-const INTEREST_OPTIONS = ['interest:art', 'interest:crafts', 'interest:science', 'interest:outdoor']
-const MAX_PRICE_OPTIONS = [5, 10, 15, 20, 30]
+// ── Tag option definitions ───────────────────────────────────────────────────
+
+const AGE_OPTIONS = [
+  { tag: 'age:3-5',  label: '3–5' },
+  { tag: 'age:6-8',  label: '6–8' },
+  { tag: 'age:9-12', label: '9–12' },
+]
+
+const INTEREST_OPTIONS = [
+  { tag: 'interest:creative',  label: '🎨 Creative' },
+  { tag: 'interest:animals',   label: '🐾 Animals' },
+  { tag: 'interest:adventure', label: '🚀 Adventure' },
+  { tag: 'interest:magical',   label: '✨ Magical' },
+  { tag: 'interest:active',    label: '⚽ Active' },
+  { tag: 'interest:games',     label: '🎲 Games' },
+]
+
+const OCCASION_OPTIONS = [
+  { tag: 'party:birthday',    label: '🎂 Birthday' },
+  { tag: 'party:school',      label: '🏫 School Party' },
+  { tag: 'party:celebration', label: '🎉 Celebration' },
+  { tag: 'party:other',       label: '🎁 Other' },
+]
+
+// ── Shared chip row ──────────────────────────────────────────────────────────
+
+interface ChipRowProps {
+  options: { tag: string; label: string }[]
+  selected: string[]
+  onToggle: (tag: string) => void
+}
+
+function ChipRow({ options, selected, onToggle }: ChipRowProps) {
+  return (
+    <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
+      {options.map(({ tag, label }) => {
+        const isSelected = selected.includes(tag)
+        return (
+          <Chip
+            key={tag}
+            label={label}
+            onClick={() => onToggle(tag)}
+            variant={isSelected ? 'filled' : 'outlined'}
+            color={isSelected ? 'primary' : 'default'}
+            sx={{
+              borderColor: isSelected ? undefined : COLORS.border,
+              transform: isSelected ? 'scale(1.01)' : 'none',
+              cursor: 'pointer',
+              minHeight: 36,
+            }}
+          />
+        )
+      })}
+    </Stack>
+  )
+}
+
+// ── Section label ────────────────────────────────────────────────────────────
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <Typography
+      variant="caption"
+      component="p"
+      sx={{ color: COLORS.muted, fontWeight: 600, mb: 1, mt: 2, fontSize: '0.8rem' }}
+    >
+      {children}
+    </Typography>
+  )
+}
+
+// ── GiftFinder ───────────────────────────────────────────────────────────────
 
 export function GiftFinder() {
-  const [searchParams, setSearchParams] = useSearchParams()
-  const [bundles, setBundles] = useState<BundleDto[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const navigate = useNavigate()
+  const [ageTag,       setAgeTag]       = useState<string | null>(null)
+  const [interestTags, setInterestTags] = useState<string[]>([])
+  const [occasionTag,  setOccasionTag]  = useState<string | null>(null)
 
-  const activeTags = searchParams.getAll('tag')
-  const maxPrice = searchParams.get('maxPrice')
-    ? Number(searchParams.get('maxPrice'))
-    : undefined
-
-  useEffect(() => {
-    let cancelled = false
-    setLoading(true)
-    setError(null)
-    searchBundles(activeTags, maxPrice)
-      .then((data) => { if (!cancelled) setBundles(data) })
-      .catch((e: { message?: string }) => { if (!cancelled) setError(e.message ?? 'Failed to load bundles') })
-      .finally(() => { if (!cancelled) setLoading(false) })
-    return () => { cancelled = true }
-    // activeTags reference changes on every render; use the serialised string
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams.toString()])
-
-  function toggleTag(tag: string) {
-    const next = new URLSearchParams(searchParams)
-    const current = next.getAll('tag')
-    if (current.includes(tag)) {
-      next.delete('tag')
-      current.filter((t) => t !== tag).forEach((t) => next.append('tag', t))
-    } else {
-      next.append('tag', tag)
-    }
-    setSearchParams(next, { replace: true })
+  function toggleAge(tag: string) {
+    setAgeTag((prev) => (prev === tag ? null : tag))
   }
 
-  function handleMaxPrice(e: SelectChangeEvent<string>) {
-    const next = new URLSearchParams(searchParams)
-    if (e.target.value) {
-      next.set('maxPrice', e.target.value)
-    } else {
-      next.delete('maxPrice')
-    }
-    setSearchParams(next, { replace: true })
+  function toggleInterest(tag: string) {
+    setInterestTags((prev) =>
+      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+    )
   }
 
-  function clearFilters() {
-    setSearchParams({}, { replace: true })
+  function toggleOccasion(tag: string) {
+    setOccasionTag((prev) => (prev === tag ? null : tag))
   }
 
-  const hasFilters = activeTags.length > 0 || maxPrice !== undefined
+  function handleSubmit() {
+    const params = new URLSearchParams()
+    if (ageTag) params.append('tag', ageTag)
+    interestTags.forEach((t) => params.append('tag', t))
+    if (occasionTag) params.append('tag', occasionTag)
+    navigate('/bundles?' + params.toString())
+  }
+
+  const ageSelected      = ageTag      ? [ageTag]      : []
+  const occasionSelected = occasionTag ? [occasionTag] : []
 
   return (
-    <Box>
-      <Typography variant="h4" component="h1" gutterBottom>
-        Find the Perfect Gift Bag
+    <Box
+      sx={{
+        backgroundColor: '#FFFFFF',
+        border: `1px solid ${COLORS.border}`,
+        borderRadius: '22px',
+        p: { xs: 3, sm: 4 },
+      }}
+    >
+      <Typography variant="h6" component="h2" gutterBottom>
+        Let's find their favorites ✨
       </Typography>
 
-      {/* Age filter */}
-      <Stack direction="row" spacing={1} flexWrap="wrap" mb={1} alignItems="center">
-        <Typography variant="subtitle2">Age:</Typography>
-        {AGE_OPTIONS.map((tag) => (
-          <Chip
-            key={tag}
-            label={tag.replace('age:', '')}
-            onClick={() => toggleTag(tag)}
-            color={activeTags.includes(tag) ? 'primary' : 'default'}
-            variant={activeTags.includes(tag) ? 'filled' : 'outlined'}
-          />
-        ))}
-      </Stack>
+      <SectionLabel>① How old are they?</SectionLabel>
+      <ChipRow
+        options={AGE_OPTIONS}
+        selected={ageSelected}
+        onToggle={toggleAge}
+      />
 
-      {/* Interest filter */}
-      <Stack direction="row" spacing={1} flexWrap="wrap" mb={2} alignItems="center">
-        <Typography variant="subtitle2">Interest:</Typography>
-        {INTEREST_OPTIONS.map((tag) => (
-          <Chip
-            key={tag}
-            label={tag.replace('interest:', '')}
-            onClick={() => toggleTag(tag)}
-            color={activeTags.includes(tag) ? 'primary' : 'default'}
-            variant={activeTags.includes(tag) ? 'filled' : 'outlined'}
-          />
-        ))}
-      </Stack>
+      <SectionLabel>② What are they into?</SectionLabel>
+      <ChipRow
+        options={INTEREST_OPTIONS}
+        selected={interestTags}
+        onToggle={toggleInterest}
+      />
 
-      {/* Price ceiling */}
-      <Stack direction="row" spacing={2} alignItems="center" mb={2}>
-        <FormControl size="small" sx={{ minWidth: 160 }}>
-          <InputLabel id="max-price-label">Max price</InputLabel>
-          <Select
-            labelId="max-price-label"
-            label="Max price"
-            value={maxPrice !== undefined ? String(maxPrice) : ''}
-            onChange={handleMaxPrice}
-          >
-            <MenuItem value="">Any price</MenuItem>
-            {MAX_PRICE_OPTIONS.map((p) => (
-              <MenuItem key={p} value={String(p)}>
-                Up to ${p}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+      <SectionLabel>③ What's the celebration?</SectionLabel>
+      <ChipRow
+        options={OCCASION_OPTIONS}
+        selected={occasionSelected}
+        onToggle={toggleOccasion}
+      />
 
-        {hasFilters && (
-          <Button size="small" onClick={clearFilters} variant="text">
-            Clear filters
-          </Button>
-        )}
-      </Stack>
-
-      {/* Results */}
-      {loading && <Typography color="text.secondary">Loading…</Typography>}
-      {error && (
-        <Typography color="error" role="alert">
-          {error}
-        </Typography>
-      )}
-      {!loading && !error && <BundleGallery bundles={bundles} />}
+      <Button
+        variant="contained"
+        fullWidth
+        size="large"
+        onClick={handleSubmit}
+        sx={{
+          mt: 3,
+          backgroundColor: COLORS.coral,
+          '&:hover': { backgroundColor: '#e06b57' },
+          fontSize: '1rem',
+          py: 1.5,
+        }}
+      >
+        Show Me Their Goodie Bags →
+      </Button>
     </Box>
   )
 }

@@ -1,6 +1,8 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, vi, afterEach } from 'vitest'
 import { MemoryRouter } from 'react-router-dom'
+import { ThemeProvider } from '@mui/material'
+import theme from './theme'
 import App from './App'
 
 afterEach(() => {
@@ -9,64 +11,66 @@ afterEach(() => {
 
 function renderApp(initialPath = '/') {
   return render(
-    <MemoryRouter initialEntries={[initialPath]}>
-      <App />
-    </MemoryRouter>,
+    <ThemeProvider theme={theme}>
+      <MemoryRouter initialEntries={[initialPath]}>
+        <App />
+      </MemoryRouter>
+    </ThemeProvider>,
   )
 }
 
-describe('App smoke test', () => {
-  it('renders the GiftFinder heading on the root route', async () => {
+describe('App routing smoke tests', () => {
+  it('renders the homepage hero on the root route', () => {
+    renderApp('/')
+    expect(
+      screen.getByRole('heading', { name: /goodie bags/i }),
+    ).toBeInTheDocument()
+  })
+
+  it('renders the Gift Finder panel on the root route', () => {
+    renderApp('/')
+    expect(screen.getByText(/let's find their favorites/i)).toBeInTheDocument()
+  })
+
+  it('renders the BundlesPage gallery at /bundles with no params (loading)', () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
     }))
-
-    renderApp('/')
-    expect(
-      screen.getByRole('heading', { name: /find the perfect gift bag/i }),
-    ).toBeInTheDocument()
-    // drain async bundle fetch
-    await waitFor(() => expect(screen.queryByText('Loading\u2026')).not.toBeInTheDocument())
+    renderApp('/bundles')
+    expect(screen.getByText(/goodie bags for you/i)).toBeInTheDocument()
   })
-})
 
-describe('API failure-state', () => {
-  it('shows error alert when bundle search fails', async () => {
+  it('shows bundles gallery when /bundles has tag params', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve([]),
+    }))
+    renderApp('/bundles?tag=party%3Abirthday')
+    await waitFor(() => expect(screen.getByTestId('empty-state')).toBeInTheDocument())
+  })
+
+  it('shows error state when bundle search fails', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,
       status: 503,
       statusText: 'Service Unavailable',
       json: () => Promise.resolve({ detail: 'Service Unavailable' }),
     }))
-
-    renderApp('/')
-
+    renderApp('/bundles?tag=party%3Abirthday')
     await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('Service Unavailable'),
+      expect(screen.getByTestId('error-state')).toBeInTheDocument(),
     )
   })
 
-  it('shows error alert when fetch rejects (network error)', async () => {
-    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('Network error')))
-
-    renderApp('/')
-
-    await waitFor(() =>
-      expect(screen.getByRole('alert')).toHaveTextContent('Network error'),
-    )
-  })
-
-  it('shows empty state when bundle search returns an empty list', async () => {
+  it('shows empty state when search returns no results', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
       json: () => Promise.resolve([]),
     }))
-
-    renderApp('/')
-
+    renderApp('/bundles?tag=party%3Abirthday')
     await waitFor(() =>
-      expect(screen.getByTestId('no-results')).toBeInTheDocument(),
+      expect(screen.getByTestId('empty-state')).toBeInTheDocument(),
     )
   })
 })

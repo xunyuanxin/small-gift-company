@@ -1,11 +1,19 @@
 ---
-name: Phase 2 frontend complete
-description: Bundle catalog UI with react-router-dom v7, MUI v6, GiftFinder filter page, BundleGallery, BundleDetail
+name: Phase 2 frontend complete (Playful Boutique redesign)
+description: Full visual redesign done — MUI theme, 3-route structure, compact GiftFinder panel, BundlesPage with skeleton/error/empty states, BundleCard, restyled BundleDetail
 type: project
 ---
 
-Phase 2 frontend implementation is complete as of 2026-08-10.
+Phase 2 full visual redesign is complete as of 2026-08-10, following the UX spec in `docs/A_PLAYFUL_BOUTIQUE.md`.
 
-**Why:** Building out the customer-facing gift bag discovery flow on top of the Phase 1 Vite/React skeleton.
+**Why:** Redesigning from a plain MUI scaffold to the Playful Boutique brand (cream/coral/Fredoka/DM Sans).
 
-**How to apply:** The routing structure is BrowserRouter (in main.tsx) wrapping App which uses Routes. GiftFinder lives at `/`, BundleDetail at `/bundles/:id`. Filter state lives in URL search params via useSearchParams. All API calls go through `src/api/bundles.ts` which uses the existing `src/api/client.ts` fetch wrapper.
+**How to apply:**
+- Route structure: `/` → HomePage, `/bundles` → BundlesPage, `/bundles/:id` → BundleDetail
+- Theme is in `src/theme.ts`; ThemeProvider + CssBaseline wrap the app in `src/main.tsx`
+- GiftFinder is now a single compact panel (not a wizard); it uses local state and navigates to `/bundles?tag=...` on submit
+- BundlesPage owns all fetching (searchBundles), loading/error/empty states; it reads URL search params
+- BundleGallery is a pure display component that takes `bundles: BundleDto[]` and renders BundleCard grid
+- BundleCard derives theme line from tags (age → "Ages X–Y", interest → emoji label); no raw tag strings exposed
+- Tag taxonomy: `age:3-5`, `age:6-8`, `age:9-12`; `interest:creative/animals/adventure/magical/active/games`; `party:birthday/school/celebration/other`
+- All API files (`src/api/client.ts`, `src/api/bundles.ts`, `src/types/catalog.ts`) were NOT modified
