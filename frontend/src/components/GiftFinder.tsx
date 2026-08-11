@@ -1,50 +1,63 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Box, Button, Chip, Stack, Typography } from '@mui/material'
+import {
+  Box, Button, Chip, CircularProgress, Stack, Typography,
+} from '@mui/material'
+import { generateBundle } from '../api/generatedBundles'
+import type { Interest, AudiencePreference, PartyType, BudgetTierCode } from '../types/catalog'
 import { COLORS } from '../theme'
 
-// ── Tag option definitions ───────────────────────────────────────────────────
+// ── Option definitions ───────────────────────────────────────────────────────
 
 const AGE_OPTIONS = [
-  { tag: 'age:3-5',  label: '3–5' },
-  { tag: 'age:6-8',  label: '6–8' },
-  { tag: 'age:9-12', label: '9–12' },
+  { value: 4,  label: '3–5'  },
+  { value: 7,  label: '6–8'  },
+  { value: 10, label: '9–12' },
 ]
 
-const INTEREST_OPTIONS = [
-  { tag: 'interest:creative',  label: '🎨 Creative' },
-  { tag: 'interest:animals',   label: '🐾 Animals' },
-  { tag: 'interest:adventure', label: '🚀 Adventure' },
-  { tag: 'interest:magical',   label: '✨ Magical' },
-  { tag: 'interest:active',    label: '⚽ Active' },
-  { tag: 'interest:games',     label: '🎲 Games' },
+const INTEREST_OPTIONS: { value: Interest; label: string }[] = [
+  { value: 'POP_MUSIC',      label: '🎵 Pop Music'        },
+  { value: 'TOYS_PLAY',      label: '🧸 Toys & Play'      },
+  { value: 'CUTE_MAGICAL',   label: '✨ Cute & Magical'   },
+  { value: 'SPORTS',         label: '⚽ Sports'            },
+  { value: 'READING_PUZZLE', label: '📚 Reading & Puzzles' },
 ]
 
-const OCCASION_OPTIONS = [
-  { tag: 'party:birthday',    label: '🎂 Birthday' },
-  { tag: 'party:school',      label: '🏫 School Party' },
-  { tag: 'party:celebration', label: '🎉 Celebration' },
-  { tag: 'party:other',       label: '🎁 Other' },
+const AUDIENCE_OPTIONS: { value: AudiencePreference; label: string }[] = [
+  { value: 'FEMININE',      label: 'Girl'           },
+  { value: 'MASCULINE',     label: 'Boy'            },
+  { value: 'NO_PREFERENCE', label: 'No Preference'  },
+]
+
+const PARTY_OPTIONS: { value: PartyType; label: string }[] = [
+  { value: 'CELEBRATION', label: '🎉 Celebration' },
+  { value: 'HALLOWEEN',   label: '🎃 Halloween'   },
+]
+
+const BUDGET_OPTIONS: { value: BudgetTierCode; label: string }[] = [
+  { value: 'LOW',  label: 'Budget-Friendly' },
+  { value: 'MID',  label: 'Mid-Range'       },
+  { value: 'HIGH', label: 'Premium'         },
 ]
 
 // ── Shared chip row ──────────────────────────────────────────────────────────
 
-interface ChipRowProps {
-  options: { tag: string; label: string }[]
-  selected: string[]
-  onToggle: (tag: string) => void
+interface ChipRowProps<T extends string | number> {
+  options: { value: T; label: string }[]
+  selected: T | null
+  onSelect: (value: T) => void
 }
 
-function ChipRow({ options, selected, onToggle }: ChipRowProps) {
+function ChipRow<T extends string | number>({ options, selected, onSelect }: ChipRowProps<T>) {
   return (
     <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ gap: 1 }}>
-      {options.map(({ tag, label }) => {
-        const isSelected = selected.includes(tag)
+      {options.map(({ value, label }) => {
+        const isSelected = selected === value
         return (
           <Chip
-            key={tag}
+            key={String(value)}
             label={label}
-            onClick={() => onToggle(tag)}
+            onClick={() => onSelect(value)}
             variant={isSelected ? 'filled' : 'outlined'}
             color={isSelected ? 'primary' : 'default'}
             sx={{
@@ -78,34 +91,38 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 export function GiftFinder() {
   const navigate = useNavigate()
-  const [ageTag,       setAgeTag]       = useState<string | null>(null)
-  const [interestTags, setInterestTags] = useState<string[]>([])
-  const [occasionTag,  setOccasionTag]  = useState<string | null>(null)
 
-  function toggleAge(tag: string) {
-    setAgeTag((prev) => (prev === tag ? null : tag))
+  const [age,              setAge]              = useState<number | null>(null)
+  const [interest,         setInterest]         = useState<Interest | null>(null)
+  const [audiencePreference, setAudiencePreference] = useState<AudiencePreference | null>(null)
+  const [partyType,        setPartyType]        = useState<PartyType | null>(null)
+  const [budgetTierCode,   setBudgetTierCode]   = useState<BudgetTierCode | null>(null)
+  const [submitting,       setSubmitting]       = useState(false)
+  const [submitError,      setSubmitError]      = useState<string | null>(null)
+
+  async function handleSubmit() {
+    if (!age || !interest) {
+      setSubmitError('Please select an age range and an interest.')
+      return
+    }
+
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const response = await generateBundle({
+        age,
+        interest,
+        audiencePreference: audiencePreference ?? 'NO_PREFERENCE',
+        partyType:          partyType          ?? 'CELEBRATION',
+        budgetTierCode:     budgetTierCode     ?? 'MID',
+      })
+      navigate(`/bundleCustomization/${response.generatedBundleId}`)
+    } catch {
+      setSubmitError('Something went wrong. Please try again.')
+    } finally {
+      setSubmitting(false)
+    }
   }
-
-  function toggleInterest(tag: string) {
-    setInterestTags((prev) =>
-      prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
-    )
-  }
-
-  function toggleOccasion(tag: string) {
-    setOccasionTag((prev) => (prev === tag ? null : tag))
-  }
-
-  function handleSubmit() {
-    const params = new URLSearchParams()
-    if (ageTag) params.append('tag', ageTag)
-    interestTags.forEach((t) => params.append('tag', t))
-    if (occasionTag) params.append('tag', occasionTag)
-    navigate('/bundles?' + params.toString())
-  }
-
-  const ageSelected      = ageTag      ? [ageTag]      : []
-  const occasionSelected = occasionTag ? [occasionTag] : []
 
   return (
     <Box
@@ -121,31 +138,35 @@ export function GiftFinder() {
       </Typography>
 
       <SectionLabel>① How old are they?</SectionLabel>
-      <ChipRow
-        options={AGE_OPTIONS}
-        selected={ageSelected}
-        onToggle={toggleAge}
-      />
+      <ChipRow options={AGE_OPTIONS} selected={age} onSelect={setAge} />
 
       <SectionLabel>② What are they into?</SectionLabel>
-      <ChipRow
-        options={INTEREST_OPTIONS}
-        selected={interestTags}
-        onToggle={toggleInterest}
-      />
+      <ChipRow options={INTEREST_OPTIONS} selected={interest} onSelect={setInterest} />
 
-      <SectionLabel>③ What's the celebration?</SectionLabel>
-      <ChipRow
-        options={OCCASION_OPTIONS}
-        selected={occasionSelected}
-        onToggle={toggleOccasion}
-      />
+      <SectionLabel>③ Girl or boy?</SectionLabel>
+      <ChipRow options={AUDIENCE_OPTIONS} selected={audiencePreference} onSelect={setAudiencePreference} />
+
+      <SectionLabel>④ What's the celebration?</SectionLabel>
+      <ChipRow options={PARTY_OPTIONS} selected={partyType} onSelect={setPartyType} />
+
+      <SectionLabel>⑤ Budget?</SectionLabel>
+      <ChipRow options={BUDGET_OPTIONS} selected={budgetTierCode} onSelect={setBudgetTierCode} />
+
+      {submitError && (
+        <Typography
+          role="alert"
+          sx={{ color: 'error.main', fontSize: '0.875rem', mt: 2 }}
+        >
+          {submitError}
+        </Typography>
+      )}
 
       <Button
         variant="contained"
         fullWidth
         size="large"
         onClick={handleSubmit}
+        disabled={submitting}
         sx={{
           mt: 3,
           backgroundColor: COLORS.coral,
@@ -154,7 +175,11 @@ export function GiftFinder() {
           py: 1.5,
         }}
       >
-        Show Me Their Goodie Bags →
+        {submitting ? (
+          <CircularProgress size={20} sx={{ color: '#fff' }} />
+        ) : (
+          'Show Me Their Goodie Bag →'
+        )}
       </Button>
     </Box>
   )
