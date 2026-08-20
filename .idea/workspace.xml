@@ -3,21 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="bundle customization logic">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleGenerationService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundle.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleResponse.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgrade.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgrade.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgradeDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgradeDto.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/UpgradeGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/UpgradeGenerationService.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleGenerationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleGenerationServiceTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/GeneratedBundleControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/GeneratedBundleControllerIntegrationTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/OptionCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OptionCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/resources/generation-test-seed.sql" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/resources/generation-test-seed.sql" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.test.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/HomePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/HomePage.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/types/catalog.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/catalog.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,17 +34,17 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "ModuleVcsDetector.initialDetectionPerformed": "true",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
-    "git-widget-placeholder": "2-catalog-filter-logic-change",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/Users/chaoqu90/work/SmallGiftCompany",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;2-catalog-filter-logic-change&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/chaoqu90/work/SmallGiftCompany&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
-}]]></component>
+}</component>
   <component name="SharedIndexes">
     <attachedChunks>
       <set>

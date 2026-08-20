@@ -46,6 +46,12 @@ class BundleGenerationServiceTest {
             setField(p, "name", "Product " + id);
             setField(p, "description", "Desc " + id);
             setField(p, "cost", cost);
+            // retail_price formula: cost < 1 → cost (1:1); else cost/2
+            BigDecimal retailPrice = cost.compareTo(BigDecimal.ONE) < 0
+                    ? cost : cost.divide(java.math.BigDecimal.valueOf(2), 2, java.math.RoundingMode.HALF_UP);
+            setField(p, "cogOverhead", BigDecimal.ZERO);
+            setField(p, "cogAdjusted", cost);
+            setField(p, "retailPrice", retailPrice);
             setField(p, "active", true);
             setField(p, "inventoryQuantity", 100);
             setField(p, "minAge", (short) 6);

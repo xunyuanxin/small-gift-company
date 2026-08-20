@@ -116,79 +116,79 @@ VALUES ('CLASSIC_BAG', 'Classic Gift Bag', 'Standard bag with tissue paper', 0.5
 -- Individual costs chosen so 4 items sum to <= 2.50: e.g. 0.40+0.45+0.50+0.55 = 1.90
 
 -- UTILITY products (both occasions, age 6-12)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-UTIL-001', 'Test Pen A',        'Basic pen for testing',       0.40, 100, 6, 12, 'STATIONERY',    'BAR',        'STANDARD', true),
-    ('T-UTIL-002', 'Test Pen B',        'Secondary pen for testing',   0.45, 100, 6, 12, 'STATIONERY',    'BAR',        'STANDARD', true),
-    ('T-UTIL-003', 'Test Bookmark',     'Bookmark for testing',        0.35, 100, 6, 12, 'BOOK',          'FLAT_RECT',  'STANDARD', true);
+    ('T-UTIL-001', 'Test Pen A',        'Basic pen for testing',       0.40, 0, 0.40, 0.40, 100, 6, 12, 'STATIONERY',    'BAR',        'STANDARD', true),
+    ('T-UTIL-002', 'Test Pen B',        'Secondary pen for testing',   0.45, 0, 0.45, 0.45, 100, 6, 12, 'STATIONERY',    'BAR',        'STANDARD', true),
+    ('T-UTIL-003', 'Test Bookmark',     'Bookmark for testing',        0.35, 0, 0.35, 0.35, 100, 6, 12, 'BOOK',          'FLAT_RECT',  'STANDARD', true);
 
 -- ACTIVITY products (both occasions, age 6-12)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-ACT-001',  'Test Notepad A',    'Notepad for testing',         0.45, 100, 6, 12, 'STATIONERY',    'FLAT_RECT',  'STANDARD', true),
-    ('T-ACT-002',  'Test Notepad B',    'Secondary notepad',           0.50, 100, 6, 12, 'STATIONERY',    'FLAT_RECT',  'STANDARD', true);
+    ('T-ACT-001',  'Test Notepad A',    'Notepad for testing',         0.45, 0, 0.45, 0.45, 100, 6, 12, 'STATIONERY',    'FLAT_RECT',  'STANDARD', true),
+    ('T-ACT-002',  'Test Notepad B',    'Secondary notepad',           0.50, 0, 0.50, 0.50, 100, 6, 12, 'STATIONERY',    'FLAT_RECT',  'STANDARD', true);
 
 -- PLAY/WEARABLE/TACTILE products (both occasions, age 6-12)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-PLAY-001', 'Test Stretchy Toy', 'Stretchy toy for testing',    0.50, 100, 6, 12, 'TOY',           'ROUND',      'STANDARD', true),
-    ('T-PLAY-002', 'Test Bracelet',     'Bracelet for testing',        0.55, 100, 6, 12, 'ACCESSORY',     'ROUND',      'STANDARD', true),
-    ('T-PLAY-003', 'Test Mini Ball',    'Mini ball for testing',       0.45, 100, 3, 12, 'SPORT',         'ROUND',      'STANDARD', true);
+    ('T-PLAY-001', 'Test Stretchy Toy', 'Stretchy toy for testing',    0.50, 0, 0.50, 0.50, 100, 6, 12, 'TOY',           'ROUND',      'STANDARD', true),
+    ('T-PLAY-002', 'Test Bracelet',     'Bracelet for testing',        0.55, 0, 0.55, 0.50, 100, 6, 12, 'ACCESSORY',     'ROUND',      'STANDARD', true),
+    ('T-PLAY-003', 'Test Mini Ball',    'Mini ball for testing',       0.45, 0, 0.45, 0.45, 100, 3, 12, 'SPORT',         'ROUND',      'STANDARD', true);
 
 -- NOVELTY/COLLECTIBLE products (both occasions, age 6-12)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-NOV-001',  'Test Sticker Pack', 'Sticker pack for testing',   0.55, 100, 6, 12, 'STICKER_TATTOO','FLAT_RECT',  'STANDARD', true),
-    ('T-NOV-002',  'Test Mini Figure',  'Mini figure for testing',     0.60, 100, 6, 12, 'COLLECTIBLE',   'SMALL_VOLUME','STANDARD', true);
+    ('T-NOV-001',  'Test Sticker Pack', 'Sticker pack for testing',   0.55, 0, 0.55, 0.50, 100, 6, 12, 'STICKER_TATTOO','FLAT_RECT',  'STANDARD', true),
+    ('T-NOV-002',  'Test Mini Figure',  'Mini figure for testing',     0.60, 0, 0.60, 0.50, 100, 6, 12, 'COLLECTIBLE',   'SMALL_VOLUME','STANDARD', true);
 
 -- PREMIUM upgrade product (both occasions, age 6-12)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-PREM-001', 'Test Premium Figure','Premium collectible for testing', 1.60, 100, 6, 12, 'COLLECTIBLE','SMALL_VOLUME','PREMIUM', true);
+    ('T-PREM-001', 'Test Premium Figure','Premium collectible for testing', 1.60, 0, 1.60, 0.80, 100, 6, 12, 'COLLECTIBLE','SMALL_VOLUME','PREMIUM', true);
 
 -- MID budget products (cost 0.75-1.00)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-MID-UTIL-001', 'Test Mid Pen',   'Mid-range pen',              0.75, 100, 6, 12, 'STATIONERY',   'BAR',        'STANDARD', true),
-    ('T-MID-ACT-001',  'Test Mid Pad',   'Mid-range notepad',          0.80, 100, 6, 12, 'STATIONERY',   'FLAT_RECT',  'STANDARD', true),
-    ('T-MID-PLAY-001', 'Test Mid Toy',   'Mid-range toy',              0.85, 100, 6, 12, 'TOY',          'ROUND',      'STANDARD', true),
-    ('T-MID-NOV-001',  'Test Mid Cards', 'Mid-range cards',            0.90, 100, 6, 12, 'COLLECTIBLE',  'FLAT_RECT',  'STANDARD', true);
+    ('T-MID-UTIL-001', 'Test Mid Pen',   'Mid-range pen',              0.75, 0, 0.75, 0.50, 100, 6, 12, 'STATIONERY',   'BAR',        'STANDARD', true),
+    ('T-MID-ACT-001',  'Test Mid Pad',   'Mid-range notepad',          0.80, 0, 0.80, 0.50, 100, 6, 12, 'STATIONERY',   'FLAT_RECT',  'STANDARD', true),
+    ('T-MID-PLAY-001', 'Test Mid Toy',   'Mid-range toy',              0.85, 0, 0.85, 0.50, 100, 6, 12, 'TOY',          'ROUND',      'STANDARD', true),
+    ('T-MID-NOV-001',  'Test Mid Cards', 'Mid-range cards',            0.90, 0, 0.90, 0.45, 100, 6, 12, 'COLLECTIBLE',  'FLAT_RECT',  'STANDARD', true);
 
 -- PRESCHOOL products (age 3-5)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-PRE-ACT-001',  'Pre Activity',    'Preschool activity item',   0.40, 100, 3,  5, 'ACTIVITY',     'FLAT_RECT',  'STANDARD', true),
-    ('T-PRE-TAC-001',  'Pre Tactile',     'Preschool tactile item',    0.45, 100, 3,  5, 'TOY',          'ROUND',      'STANDARD', true),
-    ('T-PRE-TOY-001',  'Pre Simple Toy',  'Preschool simple toy',      0.50, 100, 3,  5, 'TOY',          'SMALL_VOLUME','STANDARD', true),
-    ('T-PRE-NOV-001',  'Pre Novelty',     'Preschool novelty item',    0.35, 100, 3,  5, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
+    ('T-PRE-ACT-001',  'Pre Activity',    'Preschool activity item',   0.40, 0, 0.40, 0.40, 100, 3,  5, 'ACTIVITY',     'FLAT_RECT',  'STANDARD', true),
+    ('T-PRE-TAC-001',  'Pre Tactile',     'Preschool tactile item',    0.45, 0, 0.45, 0.45, 100, 3,  5, 'TOY',          'ROUND',      'STANDARD', true),
+    ('T-PRE-TOY-001',  'Pre Simple Toy',  'Preschool simple toy',      0.50, 0, 0.50, 0.50, 100, 3,  5, 'TOY',          'SMALL_VOLUME','STANDARD', true),
+    ('T-PRE-NOV-001',  'Pre Novelty',     'Preschool novelty item',    0.35, 0, 0.35, 0.35, 100, 3,  5, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
 
 -- INACTIVE product (should be filtered out)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-INACT-001', 'Inactive Test Product', 'Inactive for testing',   0.40, 100, 6, 12, 'OTHER',        'OTHER',      'STANDARD', false);
+    ('T-INACT-001', 'Inactive Test Product', 'Inactive for testing',   0.40, 0, 0.40, 0.40, 100, 6, 12, 'OTHER',        'OTHER',      'STANDARD', false);
 
 -- HALLOWEEN-only product (for testing occasion filtering)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-HALL-001', 'Halloween Only',  'Halloween-only test product',   0.40, 100, 6, 12, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
+    ('T-HALL-001', 'Halloween Only',  'Halloween-only test product',   0.40, 0, 0.40, 0.40, 100, 6, 12, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
 
 -- CELEBRATION-only product
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-CELE-001', 'Celebration Only','Celebration-only test product', 0.40, 100, 6, 12, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
+    ('T-CELE-001', 'Celebration Only','Celebration-only test product', 0.40, 0, 0.40, 0.40, 100, 6, 12, 'NOVELTY',      'SMALL_VOLUME','STANDARD', true);
 
 -- Product outside age range (min_age=10 for testing age exclusion when requesting age 6)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-OLD-001', 'Older Kids Only', 'Age 10+ only test product',      0.40, 100, 10, 12, 'OTHER',       'OTHER',      'STANDARD', true);
+    ('T-OLD-001', 'Older Kids Only', 'Age 10+ only test product',      0.40, 0, 0.40, 0.40, 100, 10, 12, 'OTHER',       'OTHER',      'STANDARD', true);
 
 -- CUTE_MAGICAL themed products (for interest dominance test — both occasions)
-INSERT INTO product (sku, name, description, cost, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
+INSERT INTO product (sku, name, description, cost, cog_overhead, cog_adjusted, retail_price, inventory_quantity, min_age, max_age, category, form_factor, upgrade_tier, active)
 VALUES
-    ('T-MAGIC-UTIL-001', 'Magic Pencil',   'Unicorn pencil for testing', 0.40, 100, 6, 12, 'STATIONERY', 'BAR',        'STANDARD', true),
-    ('T-MAGIC-ACT-001',  'Magic Notepad',  'Glitter notepad for testing',0.45, 100, 6, 12, 'STATIONERY', 'FLAT_RECT',  'STANDARD', true),
-    ('T-MAGIC-PLAY-001', 'Magic Putty',    'Rainbow putty for testing',  0.50, 100, 6, 12, 'TOY',        'ROUND',      'STANDARD', true),
-    ('T-MAGIC-NOV-001',  'Magic Stickers', 'Fairy stickers for testing', 0.55, 100, 6, 12, 'STICKER_TATTOO','FLAT_RECT','STANDARD', true);
+    ('T-MAGIC-UTIL-001', 'Magic Pencil',   'Unicorn pencil for testing', 0.40, 0, 0.40, 0.40, 100, 6, 12, 'STATIONERY', 'BAR',        'STANDARD', true),
+    ('T-MAGIC-ACT-001',  'Magic Notepad',  'Glitter notepad for testing',0.45, 0, 0.45, 0.45, 100, 6, 12, 'STATIONERY', 'FLAT_RECT',  'STANDARD', true),
+    ('T-MAGIC-PLAY-001', 'Magic Putty',    'Rainbow putty for testing',  0.50, 0, 0.50, 0.50, 100, 6, 12, 'TOY',        'ROUND',      'STANDARD', true),
+    ('T-MAGIC-NOV-001',  'Magic Stickers', 'Fairy stickers for testing', 0.55, 0, 0.55, 0.50, 100, 6, 12, 'STICKER_TATTOO','FLAT_RECT','STANDARD', true);
 
 -- ── Interest Affinities ───────────────────────────────────────────────────────
 -- Standard test products: POP_MUSIC primary affinity, cross-appeal secondary

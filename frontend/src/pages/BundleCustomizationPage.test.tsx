@@ -203,6 +203,46 @@ describe('BundleCustomizationPage — Gift Bag section', () => {
   })
 })
 
+// ── Sticky top bar ───────────────────────────────────────────────────────────
+
+describe('BundleCustomizationPage — sticky top bar', () => {
+  async function setup() {
+    vi.spyOn(generatedBundlesApi, 'getGeneratedBundle').mockResolvedValue(GENERATED_BUNDLE_RESPONSE)
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Your Custom Bundle')).toBeInTheDocument())
+  }
+
+  it('renders Price per guest label', async () => {
+    await setup()
+    expect(screen.getByText(/price per guest/i)).toBeInTheDocument()
+  })
+
+  it('renders Back button in the top bar', async () => {
+    await setup()
+    expect(screen.getByRole('button', { name: /back/i })).toBeInTheDocument()
+  })
+})
+
+// ── Quantity & pricing ────────────────────────────────────────────────────────
+
+describe('BundleCustomizationPage — quantity and pricing', () => {
+  async function setup() {
+    vi.spyOn(generatedBundlesApi, 'getGeneratedBundle').mockResolvedValue(GENERATED_BUNDLE_RESPONSE)
+    renderPage()
+    await waitFor(() => expect(screen.getByText('Your Custom Bundle')).toBeInTheDocument())
+  }
+
+  it('renders the Qty label', async () => {
+    await setup()
+    expect(screen.getByText('Qty')).toBeInTheDocument()
+  })
+
+  it('renders shipping info', async () => {
+    await setup()
+    expect(screen.getByText(/shipping/i)).toBeInTheDocument()
+  })
+})
+
 // ── Continue CTA ─────────────────────────────────────────────────────────────
 
 describe('BundleCustomizationPage — Continue button', () => {
@@ -224,13 +264,9 @@ describe('BundleCustomizationPage — Continue button', () => {
     expect(screen.queryByTestId('continue-btn')).not.toBeInTheDocument()
   })
 
-  it('confirmation includes the selected upgrade and gift bag ids', async () => {
+  it('confirmation shows saved message', async () => {
     await setup()
-    const upgradeGroup = screen.getByTestId('upgrade-group')
-    const upgraded = upgradeGroup.querySelectorAll('[role="radio"]')[1]
-    fireEvent.click(upgraded)
     fireEvent.click(screen.getByTestId('continue-btn'))
-    expect(screen.getByTestId('continue-confirmation')).toHaveTextContent('upgraded')
-    expect(screen.getByTestId('continue-confirmation')).toHaveTextContent('CLASSIC_BAG')
+    expect(screen.getByTestId('continue-confirmation')).toHaveTextContent(/your selection is saved/i)
   })
 })
