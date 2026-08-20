@@ -87,24 +87,51 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+// ── Session persistence key ──────────────────────────────────────────────────
+
+const SESSION_KEY = 'giftFinderSelections'
+
+interface SavedSelections {
+  age:               number | null
+  interest:          Interest | null
+  audiencePreference: AudiencePreference | null
+  partyType:         PartyType | null
+  budgetTierCode:    BudgetTierCode | null
+}
+
+function loadSelections(): SavedSelections {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY)
+    if (raw) return JSON.parse(raw) as SavedSelections
+  } catch { /* ignore */ }
+  return { age: null, interest: null, audiencePreference: null, partyType: null, budgetTierCode: null }
+}
+
+function saveSelections(s: SavedSelections) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(s)) } catch { /* ignore */ }
+}
+
 // ── GiftFinder ───────────────────────────────────────────────────────────────
 
 export function GiftFinder() {
   const navigate = useNavigate()
 
-  const [age,              setAge]              = useState<number | null>(null)
-  const [interest,         setInterest]         = useState<Interest | null>(null)
-  const [audiencePreference, setAudiencePreference] = useState<AudiencePreference | null>(null)
-  const [partyType,        setPartyType]        = useState<PartyType | null>(null)
-  const [budgetTierCode,   setBudgetTierCode]   = useState<BudgetTierCode | null>(null)
-  const [submitting,       setSubmitting]       = useState(false)
-  const [submitError,      setSubmitError]      = useState<string | null>(null)
+  const saved = loadSelections()
+  const [age,                setAge]                = useState<number | null>(saved.age)
+  const [interest,           setInterest]           = useState<Interest | null>(saved.interest)
+  const [audiencePreference, setAudiencePreference] = useState<AudiencePreference | null>(saved.audiencePreference)
+  const [partyType,          setPartyType]          = useState<PartyType | null>(saved.partyType)
+  const [budgetTierCode,     setBudgetTierCode]     = useState<BudgetTierCode | null>(saved.budgetTierCode)
+  const [submitting,         setSubmitting]         = useState(false)
+  const [submitError,        setSubmitError]        = useState<string | null>(null)
 
   async function handleSubmit() {
     if (!age || !interest) {
       setSubmitError('Please select an age range and an interest.')
       return
     }
+
+    saveSelections({ age, interest, audiencePreference, partyType, budgetTierCode })
 
     setSubmitting(true)
     setSubmitError(null)
@@ -124,23 +151,62 @@ export function GiftFinder() {
     }
   }
 
+  const hasAnySelection = age !== null || interest !== null || audiencePreference !== null
+    || partyType !== null || budgetTierCode !== null
+
+  function handleClearAll() {
+    setAge(null)
+    setInterest(null)
+    setAudiencePreference(null)
+    setPartyType(null)
+    setBudgetTierCode(null)
+    setSubmitError(null)
+    saveSelections({ age: null, interest: null, audiencePreference: null, partyType: null, budgetTierCode: null })
+  }
+
   return (
     <Box
       sx={{
         backgroundColor: '#FFFFFF',
-        border: `1px solid ${COLORS.border}`,
         borderRadius: '22px',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.07)',
         p: { xs: 3, sm: 4 },
       }}
     >
-      <Typography variant="h6" component="h2" gutterBottom>
-        Let's find their favorites ✨
-      </Typography>
+      <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
+        <Typography variant="h6" component="h2">
+          Let's find their favorites ✨
+        </Typography>
+        {hasAnySelection && (
+          <Box
+            component="button"
+            onClick={handleClearAll}
+            sx={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color: COLORS.muted,
+              fontSize: '0.75rem',
+              fontWeight: 500,
+              fontFamily: '"DM Sans", Inter, sans-serif',
+              px: 1,
+              py: 0.25,
+              borderRadius: '6px',
+              flexShrink: 0,
+              ml: 2,
+              '&:hover': { color: COLORS.coral, backgroundColor: 'rgba(244,127,107,0.07)' },
+              '&:focus-visible': { outline: `2px solid ${COLORS.coral}`, outlineOffset: 2 },
+            }}
+          >
+            Clear all
+          </Box>
+        )}
+      </Box>
 
-      <SectionLabel>① How old are they?</SectionLabel>
+      <SectionLabel>① How old are they? <Box component="span" sx={{ color: COLORS.muted, fontSize: '0.75rem', verticalAlign: 'super' }}>*</Box></SectionLabel>
       <ChipRow options={AGE_OPTIONS} selected={age} onSelect={setAge} />
 
-      <SectionLabel>② What are they into?</SectionLabel>
+      <SectionLabel>② What are they into? <Box component="span" sx={{ color: COLORS.muted, fontSize: '0.75rem', verticalAlign: 'super' }}>*</Box></SectionLabel>
       <ChipRow options={INTEREST_OPTIONS} selected={interest} onSelect={setInterest} />
 
       <SectionLabel>③ Girl or boy?</SectionLabel>
@@ -155,7 +221,7 @@ export function GiftFinder() {
       {submitError && (
         <Typography
           role="alert"
-          sx={{ color: 'error.main', fontSize: '0.875rem', mt: 2 }}
+          sx={{ color: COLORS.muted, fontSize: '0.875rem', mt: 2 }}
         >
           {submitError}
         </Typography>
@@ -178,7 +244,7 @@ export function GiftFinder() {
         {submitting ? (
           <CircularProgress size={20} sx={{ color: '#fff' }} />
         ) : (
-          'Show Me Their Goodie Bag →'
+          'Ready, Set, Gift! →'
         )}
       </Button>
     </Box>

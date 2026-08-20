@@ -70,7 +70,8 @@ class GeneratedBundleControllerIntegrationTest {
                         .content(validGeneralRequest()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.generatedBundleId").value(startsWith("gb_")))
-                .andExpect(jsonPath("$.templateCode").value("GENERAL_4_ITEM"));
+                .andExpect(jsonPath("$.templateCode").value("GENERAL_4_ITEM"))
+                .andExpect(jsonPath("$.bundleRetailPrice").isNotEmpty());
     }
 
     @Test

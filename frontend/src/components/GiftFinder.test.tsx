@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, afterEach } from 'vitest'
+import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from '@mui/material'
@@ -7,12 +7,20 @@ import { GiftFinder } from './GiftFinder'
 import * as generatedBundlesApi from '../api/generatedBundles'
 import type { GeneratedBundleResponse } from '../types/catalog'
 
-afterEach(() => vi.restoreAllMocks())
+afterEach(() => {
+  vi.restoreAllMocks()
+  sessionStorage.clear()
+})
+
+beforeEach(() => {
+  sessionStorage.clear()
+})
 
 const GENERATED_BUNDLE_STUB: GeneratedBundleResponse = {
   generatedBundleId: 'gb_test123456',
   templateCode: 'GENERAL_4_ITEM',
   standardItemCogsSnapshot: 9.50,
+  bundleRetailPrice: 36.00,
   items: [],
   upgrade: null,
   giftBag: { code: 'CLASSIC_BAG', name: 'Classic Party Bag', retailPriceAdjustment: null, isDefault: true },
@@ -82,11 +90,18 @@ describe('GiftFinder — layout', () => {
     expect(screen.getByText('Premium')).toBeInTheDocument()
   })
 
-  it('renders submit button with singular label', () => {
+  it('renders submit button', () => {
     renderFinder()
-    expect(
-      screen.getByRole('button', { name: /show me their goodie bag →/i }),
-    ).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /ready, set, gift/i })).toBeInTheDocument()
+  })
+
+  it('mandatory questions have a required marker', () => {
+    renderFinder()
+    // Both age and interest labels render a * alongside them
+    const ageLabel      = screen.getByText(/how old are they/i).closest('p')
+    const interestLabel = screen.getByText(/what are they into/i).closest('p')
+    expect(ageLabel?.textContent).toContain('*')
+    expect(interestLabel?.textContent).toContain('*')
   })
 })
 
@@ -140,13 +155,47 @@ describe('GiftFinder — chip selection', () => {
   })
 })
 
+describe('GiftFinder — Clear all', () => {
+  it('does not show Clear all when nothing is selected', () => {
+    renderFinder()
+    expect(screen.queryByText('Clear all')).not.toBeInTheDocument()
+  })
+
+  it('shows Clear all once any selection is made', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    expect(screen.getByText('Clear all')).toBeInTheDocument()
+  })
+
+  it('clicking Clear all resets all selections and hides itself', () => {
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByText('Girl'))
+    fireEvent.click(screen.getByText('Clear all'))
+    expect(screen.queryByText('Clear all')).not.toBeInTheDocument()
+  })
+
+  it('clicking Clear all also clears submit error', async () => {
+    renderFinder()
+    // Trigger validation error first
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
+    await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
+    // Now select interest so Clear all appears (age was selected before)
+    // Error is visible; clear all should also dismiss it
+    fireEvent.click(screen.getByText('Clear all'))
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+})
+
 describe('GiftFinder — recommendation navigation', () => {
   it('submit navigates to /bundleCustomization/:publicId after selecting age and interest', async () => {
     vi.spyOn(generatedBundlesApi, 'generateBundle').mockResolvedValue(GENERATED_BUNDLE_STUB)
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
     fireEvent.click(screen.getByText('🎵 Pop Music'))
-    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() =>
       expect(screen.getByTestId('configurator-page')).toBeInTheDocument(),
     )
@@ -154,7 +203,7 @@ describe('GiftFinder — recommendation navigation', () => {
 
   it('shows error when age/interest not selected and submit is clicked', async () => {
     renderFinder()
-    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByRole('alert')).toHaveTextContent(/please select an age range and an interest/i)
   })
@@ -162,7 +211,7 @@ describe('GiftFinder — recommendation navigation', () => {
   it('shows error when age is selected but interest is not', async () => {
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
-    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByRole('alert')).toHaveTextContent(/please select an age range and an interest/i)
   })
@@ -172,7 +221,7 @@ describe('GiftFinder — recommendation navigation', () => {
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
     fireEvent.click(screen.getByText('🎵 Pop Music'))
-    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByRole('alert')).toHaveTextContent(/something went wrong/i)
   })
@@ -182,7 +231,7 @@ describe('GiftFinder — recommendation navigation', () => {
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
     fireEvent.click(screen.getByText('🎵 Pop Music'))
-    fireEvent.click(screen.getByRole('button', { name: /show me their goodie bag/i }))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() =>
       expect(screen.getByTestId('configurator-page')).toBeInTheDocument(),
     )

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
-  Box, Button, Container, Grid2, Stack, Typography,
+  Box, Button, Container, Grid2, MenuItem, Select, Stack, Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { getGeneratedBundle } from '../api/generatedBundles'
@@ -41,6 +41,7 @@ export function BundleCustomizationPage() {
   const [highlightedSku,  setHighlightedSku]  = useState<string | null>(null)
   const [upgradeOptionId, setUpgradeOptionId] = useState<string>('standard')
   const [giftBagOptionId, setGiftBagOptionId] = useState<string>('classic')
+  const [quantity,        setQuantity]        = useState<number>(10)
 
   useEffect(() => {
     if (!bundleId) return
@@ -88,7 +89,7 @@ export function BundleCustomizationPage() {
           <Typography color="error" role="alert" sx={{ mb: 2 }}>
             {error ?? 'Bundle not found'}
           </Typography>
-          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/')}>
+          <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/#finder')}>
             Back to Home
           </Button>
         </Container>
@@ -102,35 +103,98 @@ export function BundleCustomizationPage() {
     .slice()
     .sort((a, b) => a.displayOrder - b.displayOrder)
 
-  const upgradeOptions = [
-    { id: 'standard', label: 'Standard', description: 'The original curated set', meta: 'Included' },
-    ...(bundle.upgrade
-      ? [{ id: 'upgraded', label: bundle.upgrade.productName, description: 'Premium upgrade', meta: 'Pricing coming soon' }]
-      : []),
-  ]
+  const upgradeOptions: { id: string; label: string; description: string; meta: string }[] = []
+  if (bundle.upgrade?.standardProductName) {
+    upgradeOptions.push({
+      id: 'standard',
+      label: bundle.upgrade.standardProductName,
+      description: 'The included option',
+      meta: 'Included',
+    })
+  } else {
+    upgradeOptions.push({ id: 'standard', label: 'Standard', description: 'The original curated set', meta: 'Included' })
+  }
+  if (bundle.upgrade?.upgradedProductName) {
+    const adj = bundle.upgrade.upgradedRetailAdjustment
+    const adjLabel = adj != null && adj > 0 ? `+$${adj.toFixed(2)}` : 'Pricing coming soon'
+    upgradeOptions.push({
+      id: 'upgraded',
+      label: bundle.upgrade.upgradedProductName,
+      description: 'Premium upgrade',
+      meta: adjLabel,
+    })
+  }
 
   const giftBagOptions = bundle.giftBag
     ? [{ id: bundle.giftBag.code, label: bundle.giftBag.name, description: 'Ready-to-fill gift bag', meta: 'Included' }]
     : [{ id: 'classic', label: 'Classic Party Bag', description: 'Our standard ready-to-fill gift bag', meta: 'Included' }]
 
+  // Compute the currently displayed retail price:
+  //   base (4 fixed items) + standard item (always) + upgrade delta (only when 'upgraded' chosen)
+  const basePrice    = bundle.bundleRetailPrice ?? 0
+  const standardAdj  = bundle.upgrade?.standardRetailAdjustment ?? 0
+  const upgradeAdj   =
+    upgradeOptionId === 'upgraded' && bundle.upgrade?.upgradedRetailAdjustment != null
+      ? bundle.upgrade.upgradedRetailAdjustment
+      : 0
+  const displayPrice = basePrice + standardAdj + upgradeAdj
+
+  // Shipping tiers (placeholder — adjust rates as needed)
+  function shippingFee(qty: number): number {
+    if (qty <= 10)  return 5.00
+    if (qty <= 20)  return 8.00
+    return 12.00
+  }
+  const shipping   = shippingFee(quantity)
+  const totalPrice = displayPrice * quantity + shipping
+
   return (
     <Box sx={{ backgroundColor: C.bg, minHeight: '100vh' }}>
-      <Container maxWidth="lg" sx={{ py: { xs: 3, md: 5 } }}>
 
+      {/* ── Sticky top bar: Back + price ─────────────────────────────────── */}
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 100,
+          backgroundColor: '#FFFFFF',
+          borderBottom: '1px solid #E5E5EA',
+          px: { xs: 2, md: 4 },
+          py: 1,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+        }}
+      >
         <Button
           startIcon={<ArrowBackIcon />}
-          onClick={() => navigate('/')}
-          sx={{ mb: { xs: 2, md: 3 }, color: C.meta }}
+          onClick={() => navigate('/#finder')}
+          sx={{ color: C.meta, minWidth: 0, px: 1 }}
         >
           Back
         </Button>
+
+        {bundle.bundleRetailPrice != null && (
+          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
+            <Typography sx={{ color: C.meta, fontSize: '0.85rem' }}>
+              Price per guest
+            </Typography>
+            <Typography sx={{ color: C.accent, fontWeight: 700, fontSize: '1.1rem' }}>
+              ${displayPrice.toFixed(2)}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+
+      {/* ── Scrollable content ───────────────────────────────────────────── */}
+      <Container maxWidth="lg" sx={{ pt: { xs: 3, md: 5 } }}>
 
         <Grid2 container spacing={{ xs: 3, md: 6 }} alignItems="flex-start">
 
           {/* ── Left column: geometric visual ────────────────────────────── */}
           <Grid2
             size={{ xs: 12, md: 6 }}
-            sx={{ position: { md: 'sticky' }, top: { md: 24 } }}
+            sx={{ position: { md: 'sticky' }, top: { md: 72 } }}
           >
             <ConfiguratorVisual
               items={displayedItems.map((item) => ({ sku: item.sku }))}
@@ -244,46 +308,95 @@ export function BundleCustomizationPage() {
               ))}
             </Stack>
 
-            {/* ── Continue CTA ─────────────────────────────────────────────── */}
-            {continued ? (
-              <Box
-                sx={{
-                  backgroundColor: '#F0F4FA',
-                  border: '1px solid #D2D2D7',
-                  borderRadius: '12px',
-                  p: 2,
-                }}
-                data-testid="continue-confirmation"
-              >
-                <Typography sx={{ color: C.text, fontWeight: 600 }}>
-                  Your selection is saved!
-                </Typography>
-                <Typography sx={{ color: C.meta, fontSize: '0.875rem', mt: 0.5 }}>
-                  Checkout arrives in Phase 3.{' '}
-                  Configuration: <strong>{upgradeOptionId}</strong> · <strong>{giftBagOptionId}</strong>.
-                </Typography>
-              </Box>
-            ) : (
-              <Button
-                variant="contained"
-                fullWidth
-                size="large"
-                onClick={() => setContinued(true)}
-                data-testid="continue-btn"
-                sx={{
-                  backgroundColor: C.accent,
-                  '&:hover': { backgroundColor: '#e06b57' },
-                  fontSize: '1rem',
-                  py: 1.75,
-                  minHeight: 52,
-                }}
-              >
-                Continue with This Bag
-              </Button>
-            )}
           </Grid2>
         </Grid2>
+
+        {/* ── Sticky bottom CTA bar ────────────────────────────────────────
+              Lives inside the same Container as the page content so its
+              left/right edges are always pixel-perfect with the content above.
+              Negative mx bleeds the white bg to the Container's outer edges;
+              matching px re-adds the gutter so the button aligns with content. */}
+        <Box
+          sx={{
+            position: 'sticky',
+            bottom: 0,
+            zIndex: 100,
+            mx: { xs: -2, sm: -3 },
+            px: { xs: 2, sm: 3 },
+            py: 1,
+            backgroundColor: '#FFFFFF',
+            borderTop: '1px solid #E5E5EA',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 2,
+          }}
+        >
+          {/* ── Quantity + total price (left) ────────────────────────────── */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
+            <Typography sx={{ color: C.meta, fontSize: '0.85rem' }}>Qty</Typography>
+            <Select
+              value={quantity}
+              onChange={(e) => setQuantity(Number(e.target.value))}
+              size="small"
+              sx={{
+                fontSize: '0.95rem',
+                fontWeight: 600,
+                color: C.text,
+                '.MuiOutlinedInput-notchedOutline': { borderColor: '#E5E5EA' },
+                '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: C.accent },
+                '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: C.accent },
+                borderRadius: '10px',
+                minWidth: 72,
+              }}
+            >
+              {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
+                <MenuItem key={n} value={n} sx={{ fontSize: '0.95rem' }}>{n}</MenuItem>
+              ))}
+            </Select>
+            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
+              <Typography sx={{ color: C.accent, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.2 }}>
+                ${totalPrice.toFixed(2)}
+              </Typography>
+              <Typography sx={{ color: C.meta, fontSize: '0.75rem' }}>
+                incl. ${shipping.toFixed(2)} shipping
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* ── Spacer ───────────────────────────────────────────────────── */}
+          <Box sx={{ flex: 1 }} />
+
+          {/* ── CTA ──────────────────────────────────────────────────────── */}
+          {continued ? (
+            <Typography
+              sx={{ color: C.meta, fontSize: '0.85rem', flexShrink: 0 }}
+              data-testid="continue-confirmation"
+            >
+              Your selection is saved!
+            </Typography>
+          ) : (
+            <Button
+              variant="contained"
+              size="large"
+              onClick={() => setContinued(true)}
+              data-testid="continue-btn"
+              sx={{
+                backgroundColor: C.accent,
+                '&:hover': { backgroundColor: '#e06b57' },
+                fontSize: '1rem',
+                py: 1,
+                minHeight: 52,
+                px: 4,
+                flexShrink: 0,
+              }}
+            >
+              Continue with This Bag
+            </Button>
+          )}
+        </Box>
+
       </Container>
+
     </Box>
   )
 }

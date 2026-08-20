@@ -1,8 +1,21 @@
+import { useEffect } from 'react'
+import { useLocation } from 'react-router-dom'
 import { Box, Button, Container, Stack, Typography } from '@mui/material'
 import { GiftFinder } from '../components/GiftFinder'
 import { COLORS } from '../theme'
 
 export function HomePage() {
+  const { hash } = useLocation()
+
+  useEffect(() => {
+    if (hash === '#finder') {
+      const el = document.getElementById('finder')
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth' })
+        el.focus({ preventScroll: true })
+      }
+    }
+  }, [hash])
   return (
     <Box sx={{ backgroundColor: COLORS.cream, minHeight: '100vh' }}>
       {/* Hero */}
@@ -25,8 +38,8 @@ export function HomePage() {
               color: COLORS.charcoal,
             }}
           >
-            Goodie bags<br />
-            kids actually get excited about. ✨
+            Goodie Bags. <br />
+            Without the Goodie-Bag Work. ✨
           </Typography>
 
           <Typography
@@ -39,8 +52,8 @@ export function HomePage() {
               mx: 'auto',
             }}
           >
-            Thoughtfully bundled party favors,<br />
-            with a little help from kids themselves.
+            IT IS A SMALL GIFT CO.,<br />
+            Good Stuff. Handpicked By Kids.
           </Typography>
 
           <Button
@@ -55,7 +68,7 @@ export function HomePage() {
               '&:hover': { backgroundColor: '#e06b57' },
             }}
           >
-            Find Their Goodie Bag
+            BUILD YOURS NOW
           </Button>
         </Container>
       </Box>
@@ -87,7 +100,7 @@ export function HomePage() {
       </Box>
 
       {/* Gift Finder panel */}
-      <Box id="finder" sx={{ pb: { xs: 6, md: 10 } }}>
+      <Box id="finder" tabIndex={-1} sx={{ pb: { xs: 6, md: 10 }, outline: 'none' }}>
         <Container maxWidth="sm">
           <GiftFinder />
         </Container>
