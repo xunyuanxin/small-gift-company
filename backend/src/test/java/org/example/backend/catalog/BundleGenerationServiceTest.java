@@ -219,8 +219,8 @@ class BundleGenerationServiceTest {
         when(giftBagOptionRepository.findByIsDefaultTrue()).thenReturn(Optional.of(buildGiftBag()));
 
         // Upgrade: none
-        when(upgradeGenerationService.selectUpgrade(anyList(), anySet(), any(), anyMap()))
-                .thenReturn(Optional.empty());
+        when(upgradeGenerationService.selectUpgrades(anyList(), anySet(), any(), anyMap()))
+                .thenReturn(new UpgradeGenerationService.UpgradeSelection(Optional.empty(), Optional.empty()));
 
         // Repository save: return a pre-built bundle
         BundleTemplate template = setup.template();
@@ -332,8 +332,8 @@ class BundleGenerationServiceTest {
                 .thenReturn(true);
         when(scoringService.score(any(), any(), any(), anyList(), anyList(), anyList())).thenReturn(50);
         when(giftBagOptionRepository.findByIsDefaultTrue()).thenReturn(Optional.of(buildGiftBag()));
-        when(upgradeGenerationService.selectUpgrade(anyList(), anySet(), any(), anyMap()))
-                .thenReturn(Optional.empty());
+        when(upgradeGenerationService.selectUpgrades(anyList(), anySet(), any(), anyMap()))
+                .thenReturn(new UpgradeGenerationService.UpgradeSelection(Optional.empty(), Optional.empty()));
 
         GeneratedBundle savedBundle = buildSavedBundle(preschool, budgetTier);
         when(generatedBundleRepository.save(any())).thenReturn(savedBundle);
@@ -381,8 +381,8 @@ class BundleGenerationServiceTest {
                 .thenReturn(true);
         when(scoringService.score(any(), any(), any(), anyList(), anyList(), anyList())).thenReturn(50);
         when(giftBagOptionRepository.findByIsDefaultTrue()).thenReturn(Optional.of(buildGiftBag()));
-        when(upgradeGenerationService.selectUpgrade(anyList(), anySet(), any(), anyMap()))
-                .thenReturn(Optional.empty());
+        when(upgradeGenerationService.selectUpgrades(anyList(), anySet(), any(), anyMap()))
+                .thenReturn(new UpgradeGenerationService.UpgradeSelection(Optional.empty(), Optional.empty()));
 
         GeneratedBundle savedBundle = buildSavedBundle(rpTemplate, budgetTier);
         when(generatedBundleRepository.save(any())).thenReturn(savedBundle);

@@ -1,5 +1,4 @@
 import { Box, Typography } from '@mui/material'
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'
 
 // Spec §16 — shared reusable selection card for Upgrade and Gift Bag sections.
 // Rendered as a radio option: use a wrapping radiogroup for accessibility.
@@ -31,10 +30,6 @@ export function OptionCard({ label, description, meta, selected, onClick }: Prop
         padding: { xs: '14px 16px', sm: '16px 20px' },
         backgroundColor: selected ? '#F0F4FA' : '#FFFFFF',
         cursor: 'pointer',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 1,
         outline: 'none',
         transition: 'border-color 150ms ease, background-color 150ms ease',
         '&:focus-visible': { boxShadow: '0 0 0 3px #4A6FA540' },
@@ -54,13 +49,6 @@ export function OptionCard({ label, description, meta, selected, onClick }: Prop
           </Typography>
         )}
       </Box>
-      {selected && (
-        <CheckCircleIcon
-          fontSize="small"
-          aria-hidden="true"
-          sx={{ color: '#4A6FA5', flexShrink: 0, mt: 0.25 }}
-        />
-      )}
     </Box>
   )
 }

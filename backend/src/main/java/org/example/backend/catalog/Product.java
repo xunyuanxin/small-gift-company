@@ -27,6 +27,15 @@ public class Product {
     @Column(name = "cost", nullable = false, precision = 10, scale = 2)
     private BigDecimal cost;
 
+    @Column(name = "cog_overhead", nullable = false, precision = 10, scale = 2)
+    private BigDecimal cogOverhead;
+
+    @Column(name = "cog_adjusted", nullable = false, precision = 10, scale = 2)
+    private BigDecimal cogAdjusted;
+
+    @Column(name = "retail_price", nullable = false, precision = 10, scale = 2)
+    private BigDecimal retailPrice;
+
     @Column(name = "inventory_quantity", nullable = false)
     private int inventoryQuantity;
 
@@ -68,6 +77,9 @@ public class Product {
     public String getDescription()         { return description; }
     public String getImageUrl()            { return imageUrl; }
     public BigDecimal getCost()            { return cost; }
+    public BigDecimal getCogOverhead()     { return cogOverhead; }
+    public BigDecimal getCogAdjusted()     { return cogAdjusted; }
+    public BigDecimal getRetailPrice()     { return retailPrice; }
     public int getInventoryQuantity()      { return inventoryQuantity; }
     public boolean isActive()              { return active; }
     public short getMinAge()               { return minAge; }

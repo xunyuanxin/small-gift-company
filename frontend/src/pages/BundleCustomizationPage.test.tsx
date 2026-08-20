@@ -15,15 +15,19 @@ const GENERATED_BUNDLE_RESPONSE: GeneratedBundleResponse = {
   generatedBundleId: 'gb_test123456',
   templateCode: 'GENERAL_4_ITEM',
   standardItemCogsSnapshot: 9.50,
+  bundleRetailPrice: 36.00,
   items: [
     { slotCode: 'UTILITY',  productName: 'Mini Crayon Set',      sku: 'CRAYON-001',  description: '8-colour mini crayon set',       formFactor: 'LINEAR', quantityPerBag: 1, displayOrder: 1 },
     { slotCode: 'ACTIVITY', productName: 'Unicorn Sticker Pack', sku: 'STICKER-001', description: 'Pack of 12 unicorn stickers',     formFactor: 'FLAT',   quantityPerBag: 1, displayOrder: 2 },
     { slotCode: 'PLAY',     productName: 'Rainbow Silly Putty',  sku: 'PUTTY-001',   description: 'Stretchy rainbow-coloured putty', formFactor: 'ROUND',  quantityPerBag: 1, displayOrder: 3 },
   ],
   upgrade: {
-    productName: 'Premium Art Set',
-    sku: 'ART-PREMIUM-001',
-    retailPriceAdjustment: null,
+    standardProductName: 'Rainbow Silly Putty',
+    standardSku: 'PUTTY-001',
+    standardRetailAdjustment: null,
+    upgradedProductName: 'Premium Art Set',
+    upgradedSku: 'ART-PREMIUM-001',
+    upgradedRetailAdjustment: 9.00,
   },
   giftBag: {
     code: 'CLASSIC_BAG',
@@ -82,7 +86,8 @@ describe('BundleCustomizationPage — Included items', () => {
     await setup()
     expect(screen.getByText('Mini Crayon Set')).toBeInTheDocument()
     expect(screen.getByText('Unicorn Sticker Pack')).toBeInTheDocument()
-    expect(screen.getByText('Rainbow Silly Putty')).toBeInTheDocument()
+    // 'Rainbow Silly Putty' also appears as the standard upgrade label
+    expect(screen.getAllByText('Rainbow Silly Putty').length).toBeGreaterThanOrEqual(1)
   })
 
   it('item cards are rendered with button semantics', async () => {

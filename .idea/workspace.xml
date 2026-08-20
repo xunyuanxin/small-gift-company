@@ -1,32 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="npm install locally">
+    <list default="true" id="ef53d619-fbf9-4aea-91ca-fe275edfe4e9" name="Changes" comment="bundle customization logic">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Bundle.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleController.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleDetailDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItem.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleItemDto.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleRepository.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleService.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/BundleGenerationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundle.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundle.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleResponse.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleResponse.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgrade.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgrade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgradeDto.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/GeneratedBundleUpgradeDto.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/Product.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/web/GlobalExceptionHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/web/GlobalExceptionHandler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleControllerIntegrationTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleServiceTest.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.test.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/App.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/App.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/bundles.ts" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/api/client.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/api/client.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleCard.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleDetail.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.test.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/BundleGallery.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.test.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/UpgradeGenerationService.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/main/java/org/example/backend/catalog/UpgradeGenerationService.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleGenerationServiceTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/BundleGenerationServiceTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/GeneratedBundleControllerIntegrationTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/test/java/org/example/backend/catalog/GeneratedBundleControllerIntegrationTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/GiftFinder.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundlesPage.test.tsx" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundlesPage.tsx" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/components/OptionCard.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/components/OptionCard.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.test.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.test.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/BundleCustomizationPage.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/frontend/src/pages/HomePage.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/pages/HomePage.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/frontend/src/types/catalog.ts" beforeDir="false" afterPath="$PROJECT_DIR$/frontend/src/types/catalog.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -63,7 +53,7 @@
     "git-widget-placeholder": "2-catalog-filter-logic-change",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/chaoqu90/work/SmallGiftCompany",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+    "settings.editor.selected.configurable": "preferences.pluginManager"
   }
 }]]></component>
   <component name="SharedIndexes">
@@ -97,12 +87,25 @@
       <option name="project" value="LOCAL" />
       <updated>1786385148021</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="bundle customization logic">
+      <option name="closed" value="true" />
+      <created>1786406383071</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1786406383071</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="npm install locally" />
     <MESSAGE value="add close icon for filter chip" />
-    <option name="LAST_COMMIT_MESSAGE" value="add close icon for filter chip" />
+    <MESSAGE value="bundle customization logic" />
+    <option name="LAST_COMMIT_MESSAGE" value="bundle customization logic" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
   </component>
 </project>

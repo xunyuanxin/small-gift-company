@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 @Service
 public class BundleGenerationService {
 
+
     private final BudgetTierRepository budgetTierRepository;
     private final ProductRepository productRepository;
     private final ProductInterestAffinityRepository interestAffinityRepository;
@@ -174,8 +175,8 @@ public class BundleGenerationService {
                 .map(s -> s.product().getCost())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 7. Select upgrade
-        Optional<Product> upgradeProduct = upgradeGenerationService.selectUpgrade(
+        // 7. Select upgrades (standard + premium)
+        UpgradeGenerationService.UpgradeSelection upgradeSelection = upgradeGenerationService.selectUpgrades(
                 eligible, selectedIds, request, interestByProduct);
 
         // 8. Select default gift bag
@@ -197,6 +198,12 @@ public class BundleGenerationService {
                 totalCogs
         );
 
+        // Set base retail price = sum of selected item retail prices
+        BigDecimal baseRetailPrice = slotSelections.stream()
+                .map(s -> s.product().getRetailPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        bundle.setBaseRetailPrice(baseRetailPrice);
+
         // Save bundle first to get its PK
         final GeneratedBundle savedBundle = generatedBundleRepository.save(bundle);
 
@@ -208,10 +215,24 @@ public class BundleGenerationService {
                     selection.product(), selection.slot().getDisplayOrder()));
         }
 
-        // Build upgrade and giftBag
-        GeneratedBundleUpgrade upgrade = upgradeProduct
-                .map(p -> new GeneratedBundleUpgrade(savedBundle, p))
-                .orElse(new GeneratedBundleUpgrade(savedBundle));
+        // Build upgrade based on which products were selected
+        Optional<Product> standardOpt = upgradeSelection.standardProduct();
+        Optional<Product> premiumOpt = upgradeSelection.premiumProduct();
+
+        GeneratedBundleUpgrade upgrade;
+        if (standardOpt.isPresent() && premiumOpt.isPresent()) {
+            BigDecimal standardRetailPrice = standardOpt.get().getRetailPrice();
+            BigDecimal upgradeDelta = premiumOpt.get().getRetailPrice().subtract(standardRetailPrice);
+            upgrade = new GeneratedBundleUpgrade(
+                    savedBundle,
+                    standardOpt.get(), standardRetailPrice,
+                    premiumOpt.get(), upgradeDelta);
+        } else if (standardOpt.isPresent()) {
+            upgrade = new GeneratedBundleUpgrade(
+                    savedBundle, standardOpt.get(), standardOpt.get().getRetailPrice());
+        } else {
+            upgrade = new GeneratedBundleUpgrade(savedBundle);
+        }
 
         GeneratedBundleGiftBag giftBag = new GeneratedBundleGiftBag(savedBundle, giftBagOption);
 

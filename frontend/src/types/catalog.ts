@@ -25,9 +25,12 @@ export interface GeneratedBundleItemDto {
 }
 
 export interface GeneratedBundleUpgradeDto {
-  productName: string
-  sku: string
-  retailPriceAdjustment: number | null
+  standardProductName: string | null
+  standardSku: string | null
+  standardRetailAdjustment: number | null
+  upgradedProductName: string | null
+  upgradedSku: string | null
+  upgradedRetailAdjustment: number | null
 }
 
 export interface GeneratedBundleGiftBagDto {
@@ -41,6 +44,7 @@ export interface GeneratedBundleResponse {
   generatedBundleId: string
   templateCode: string
   standardItemCogsSnapshot: number
+  bundleRetailPrice: number | null
   items: GeneratedBundleItemDto[]
   upgrade: GeneratedBundleUpgradeDto | null
   giftBag: GeneratedBundleGiftBagDto | null

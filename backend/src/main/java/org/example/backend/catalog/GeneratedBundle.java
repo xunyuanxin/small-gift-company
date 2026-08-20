@@ -106,4 +106,5 @@ public class GeneratedBundle {
     public void setUpgrade(GeneratedBundleUpgrade upgrade)              { this.upgrade = upgrade; }
     public void setGiftBag(GeneratedBundleGiftBag giftBag)             { this.giftBag = giftBag; }
     public void setStandardItemCogsSnapshot(BigDecimal cogs)           { this.standardItemCogsSnapshot = cogs; }
+    public void setBaseRetailPrice(BigDecimal price)                   { this.baseRetailPrice = price; }
 }
