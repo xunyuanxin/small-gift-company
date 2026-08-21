@@ -216,6 +216,8 @@ class BundleGenerationServiceTest {
         // Eligibility: return all eligible products
         when(eligibilityService.isEligible(any(Product.class), anyInt(), any(PartyType.class), anyMap()))
                 .thenReturn(true);
+        when(eligibilityService.isAudienceCompatible(anyLong(), any(AudiencePreference.class), anyMap()))
+                .thenReturn(true);
 
         // Scoring: return 50 for all
         when(scoringService.score(any(), any(), any(), anyList(), anyList(), anyList()))
@@ -290,6 +292,8 @@ class BundleGenerationServiceTest {
         when(roleAffinityRepository.findAllByProductIdIn(anyCollection())).thenReturn(roleAffs);
         when(eligibilityService.isEligible(any(Product.class), anyInt(), any(PartyType.class), anyMap()))
                 .thenReturn(true);
+        when(eligibilityService.isAudienceCompatible(anyLong(), any(AudiencePreference.class), anyMap()))
+                .thenReturn(true);
 
         assertThatThrownBy(() -> service.generate(defaultRequest()))
                 .isInstanceOf(BundleGenerationException.class)
@@ -335,6 +339,8 @@ class BundleGenerationServiceTest {
         when(occasionRepository.findAllByProductIdIn(anyCollection())).thenReturn(List.of());
         when(roleAffinityRepository.findAllByProductIdIn(anyCollection())).thenReturn(roleAffs);
         when(eligibilityService.isEligible(any(Product.class), anyInt(), any(PartyType.class), anyMap()))
+                .thenReturn(true);
+        when(eligibilityService.isAudienceCompatible(anyLong(), any(AudiencePreference.class), anyMap()))
                 .thenReturn(true);
         when(scoringService.score(any(), any(), any(), anyList(), anyList(), anyList())).thenReturn(50);
         when(giftBagOptionRepository.findByIsDefaultTrue()).thenReturn(Optional.of(buildGiftBag()));
@@ -384,6 +390,8 @@ class BundleGenerationServiceTest {
         when(occasionRepository.findAllByProductIdIn(anyCollection())).thenReturn(List.of());
         when(roleAffinityRepository.findAllByProductIdIn(anyCollection())).thenReturn(roleAffs);
         when(eligibilityService.isEligible(any(Product.class), anyInt(), any(PartyType.class), anyMap()))
+                .thenReturn(true);
+        when(eligibilityService.isAudienceCompatible(anyLong(), any(AudiencePreference.class), anyMap()))
                 .thenReturn(true);
         when(scoringService.score(any(), any(), any(), anyList(), anyList(), anyList())).thenReturn(50);
         when(giftBagOptionRepository.findByIsDefaultTrue()).thenReturn(Optional.of(buildGiftBag()));

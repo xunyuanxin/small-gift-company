@@ -212,9 +212,9 @@ describe('BundleCustomizationPage — sticky top bar', () => {
     await waitFor(() => expect(screen.getByText('Your Custom Bundle')).toBeInTheDocument())
   }
 
-  it('renders Price per guest label', async () => {
+  it('renders One bag per guest label', async () => {
     await setup()
-    expect(screen.getByText(/price per guest/i)).toBeInTheDocument()
+    expect(screen.getByText(/one bag per guest/i)).toBeInTheDocument()
   })
 
   it('renders Back button in the top bar', async () => {
@@ -232,9 +232,9 @@ describe('BundleCustomizationPage — quantity and pricing', () => {
     await waitFor(() => expect(screen.getByText('Your Custom Bundle')).toBeInTheDocument())
   }
 
-  it('renders the Qty label', async () => {
+  it('renders the Party Size label', async () => {
     await setup()
-    expect(screen.getByText('Qty')).toBeInTheDocument()
+    expect(screen.getByText(/party size/i)).toBeInTheDocument()
   })
 
   it('renders shipping info', async () => {

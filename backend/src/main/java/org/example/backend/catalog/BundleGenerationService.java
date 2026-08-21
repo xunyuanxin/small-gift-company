@@ -120,6 +120,19 @@ public class BundleGenerationService {
                         request.partyType(), occasionsByProduct))
                 .toList();
 
+        // 5b. Hard audience filter: remove items incompatible with the gender preference.
+        //     MASCULINE     → keep MASCULINE or UNIVERSAL (products with no affinity are neutral).
+        //     FEMININE      → keep FEMININE  or UNIVERSAL.
+        //     NO_PREFERENCE → keep UNIVERSAL only (drop FEMININE-only and MASCULINE-only items).
+        //     Applied to both the preference-filtered eligible pool AND the broader allActive pool
+        //     used by the PATH 3 per-slot fallback, so gender is always the first hard filter.
+        eligible = eligible.stream()
+                .filter(p -> eligibilityService.isAudienceCompatible(p.getId(), request.audiencePreference(), audienceByProduct))
+                .toList();
+        final List<Product> allActiveAudienceCompatible = allActive.stream()
+                .filter(p -> eligibilityService.isAudienceCompatible(p.getId(), request.audiencePreference(), audienceByProduct))
+                .toList();
+
         if (eligible.isEmpty()) {
             throw new BundleGenerationException(
                     BundleGenerationException.FailureCode.NO_ELIGIBLE_PRODUCTS,
@@ -161,22 +174,17 @@ public class BundleGenerationService {
 
         } else {
             // ── PATH 2/3: Constrained ─────────────────────────────────────────────
-            // Phase A: Find the best-scoring STANDARD and PREMIUM upgrades from the
-            // eligible pool to calculate how much retail budget to reserve for upgrades.
+            // Phase A: Find the best-scoring STANDARD upgrade to reserve its retail
+            // price from the ceiling.  Premium is NOT reserved here — it is an
+            // explicit opt-in that can exceed the ceiling.
             Optional<Product> reserveStd = eligible.stream()
                     .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
-                    .max(Comparator.comparingInt(p ->
-                            interestScore(p.getId(), request.interest(), interestByProduct)));
+                    .max(Comparator.comparingInt((Product p) ->
+                                    interestScore(p.getId(), request.interest(), interestByProduct))
+                            .thenComparing(Comparator.comparing(Product::getRetailPrice).reversed()));
 
-            Optional<Product> reservePrem = eligible.stream()
-                    .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
-                    .filter(p -> reserveStd.map(s -> !s.getId().equals(p.getId())).orElse(true))
-                    .max(Comparator.comparingInt(p ->
-                            interestScore(p.getId(), request.interest(), interestByProduct)));
-
-            // Phase B: Slot budget = ceiling − upgrade reserve
-            BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO)
-                    .add(reservePrem.map(Product::getRetailPrice).orElse(BigDecimal.ZERO));
+            // Phase B: Slot budget = ceiling − standard upgrade reserve only
+            BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO);
             BigDecimal slotBudget = request.maxRetailPrice().subtract(upgradeReserve);
 
             // If the upgrade reserve already exceeds the ceiling, give all budget to slots
@@ -200,9 +208,10 @@ public class BundleGenerationService {
                         .toList();
 
                 // PATH 3 per-slot fallback: drop preference filters, use all active STANDARD
+                //   (audience filter still applies via allActiveAudienceCompatible)
                 final boolean usedFallback;
                 if (candidates.isEmpty()) {
-                    candidates = allActive.stream()
+                    candidates = allActiveAudienceCompatible.stream()
                             .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
                             .filter(p -> !selectedIds.contains(p.getId()))
                             .filter(p -> p.getRetailPrice().compareTo(currentRemaining) <= 0)
@@ -236,8 +245,9 @@ public class BundleGenerationService {
                         .toList();
 
                 // Feasibility pool: eligible for normal path, all active STANDARD for fallback
+                //   (audience filter already applied in allActiveAudienceCompatible)
                 List<Product> feasibilityPool = usedFallback
-                        ? allActive.stream().filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD).toList()
+                        ? allActiveAudienceCompatible.stream().filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD).toList()
                         : eligible;
 
                 // Find first feasible choice
@@ -278,10 +288,10 @@ public class BundleGenerationService {
             upgradeSelection = upgradeGenerationService.selectUpgrades(
                     eligible, selectedIds, request, interestByProduct);
         } else {
-            // PATH 2: STANDARD = closest to ceiling; PREMIUM = cheapest from eligible pool
+            // PATH 2: STANDARD = highest interest score, then cheapest; PREMIUM = highest interest score, then cheapest
             BigDecimal remainingForUpgrades = request.maxRetailPrice().subtract(baseRetailPrice);
             upgradeSelection = upgradeGenerationService.selectUpgradesForCeilingPath(
-                    eligible, selectedIds, remainingForUpgrades);
+                    eligible, selectedIds, remainingForUpgrades, request.interest(), interestByProduct);
         }
 
         // 8. Select default gift bag

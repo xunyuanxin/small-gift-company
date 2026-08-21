@@ -83,28 +83,38 @@ public class UpgradeGenerationService {
 
     /**
      * Ceiling-optimization variant for the constrained path:
-     * - Standard: from eligible STANDARD (not selected), retail ≤ remaining, pick the one
-     *   with the highest retail price (brings total closest to the ceiling).
-     * - Premium: from eligible PREMIUM (not selected), pick the cheapest.
+     * - Standard: from eligible STANDARD (not selected), retail ≤ remaining, pick by highest
+     *   interest score first, then cheapest as tiebreaker. Its price determines the slot budget.
+     * - Premium: from eligible PREMIUM (not selected), retail ≤ remaining (keeps 4 basics + premium
+     *   within ceiling), must be priced above standard. Pick the most expensive (closest to ceiling).
      */
     public UpgradeSelection selectUpgradesForCeilingPath(
             List<Product> eligible,
             Set<Long> selectedIds,
-            BigDecimal remaining) {
+            BigDecimal remaining,
+            Interest interest,
+            Map<Long, List<ProductInterestAffinity>> interestByProduct) {
 
         Optional<Product> standardOpt = eligible.stream()
                 .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
                 .filter(p -> !selectedIds.contains(p.getId()))
                 .filter(p -> p.getRetailPrice().compareTo(remaining) <= 0)
-                .max(Comparator.comparing(Product::getRetailPrice));
+                .max(Comparator.comparingInt((Product p) -> interestScore(p.getId(), interest, interestByProduct))
+                        .thenComparing(Comparator.comparing(Product::getRetailPrice).reversed()));
 
         final Long standardId = standardOpt.map(Product::getId).orElse(null);
+        final BigDecimal standardPrice = standardOpt.map(Product::getRetailPrice).orElse(null);
 
+        // Most expensive premium that keeps (4 basic items + premium) within the ceiling.
+        // "remaining" = ceiling − 4 basic items, so the price cap is retailPrice ≤ remaining.
+        // Premium must also be strictly more expensive than standard so the delta is always positive.
         Optional<Product> premiumOpt = eligible.stream()
                 .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
                 .filter(p -> !selectedIds.contains(p.getId()))
                 .filter(p -> standardId == null || !p.getId().equals(standardId))
-                .min(Comparator.comparing(Product::getRetailPrice));
+                .filter(p -> standardPrice == null || p.getRetailPrice().compareTo(standardPrice) > 0)
+                .filter(p -> p.getRetailPrice().compareTo(remaining) <= 0)
+                .max(Comparator.comparing(Product::getRetailPrice));
 
         return new UpgradeSelection(standardOpt, premiumOpt);
     }

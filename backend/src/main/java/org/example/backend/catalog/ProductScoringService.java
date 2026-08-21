@@ -58,6 +58,7 @@ public class ProductScoringService {
 
         for (ProductAudienceAffinity aff : audienceAffinities) {
             if (!aff.getProductId().equals(productId)) continue;
+            if (aff.getWeight() <= 0) continue;
             String audience = aff.getAudience();
             if (AudienceAffinity.FEMININE.name().equals(audience))  hasFeminine = true;
             if (AudienceAffinity.MASCULINE.name().equals(audience)) hasMasculine = true;

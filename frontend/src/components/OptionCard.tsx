@@ -13,6 +13,8 @@ interface Props {
 }
 
 export function OptionCard({ label, description, meta, selected, onClick }: Props) {
+  const isPriceDelta = meta != null && meta.startsWith('+$')
+
   return (
     <Box
       role="radio"
@@ -32,23 +34,35 @@ export function OptionCard({ label, description, meta, selected, onClick }: Prop
         cursor: 'pointer',
         outline: 'none',
         transition: 'border-color 150ms ease, background-color 150ms ease',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 2,
         '&:focus-visible': { boxShadow: '0 0 0 3px #4A6FA540' },
         '&:hover':         { borderColor: selected ? '#4A6FA5' : '#A0A0A8' },
       }}
     >
-      <Box>
+      <Box sx={{ flex: 1 }}>
         <Typography sx={{ fontWeight: 600, fontSize: '1rem', color: '#1D1D1F', mb: 0.25 }}>
           {label}
         </Typography>
         <Typography sx={{ fontSize: '0.9rem', color: '#6E6E73' }}>
           {description}
         </Typography>
-        {meta && (
-          <Typography sx={{ fontSize: '0.82rem', color: '#6E6E73', mt: 0.5, fontWeight: 500 }}>
-            {meta}
-          </Typography>
-        )}
       </Box>
+
+      {meta && (
+        <Typography
+          sx={{
+            fontSize: '0.9rem',
+            fontWeight: 700,
+            flexShrink: 0,
+            color: isPriceDelta ? '#F47F6B' : '#6E6E73',
+          }}
+        >
+          {meta}
+        </Typography>
+      )}
     </Box>
   )
 }
