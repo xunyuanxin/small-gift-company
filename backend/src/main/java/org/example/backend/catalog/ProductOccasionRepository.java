@@ -8,4 +8,8 @@ public interface ProductOccasionRepository
         extends JpaRepository<ProductOccasion, ProductOccasionId> {
 
     List<ProductOccasion> findAllByProductIdIn(Collection<Long> productIds);
+
+    List<ProductOccasion> findAllByProductId(Long productId);
+
+    void deleteAllByProductId(Long productId);
 }

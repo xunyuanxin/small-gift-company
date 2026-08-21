@@ -8,4 +8,8 @@ public interface ProductInterestAffinityRepository
         extends JpaRepository<ProductInterestAffinity, ProductInterestAffinityId> {
 
     List<ProductInterestAffinity> findAllByProductIdIn(Collection<Long> productIds);
+
+    List<ProductInterestAffinity> findAllByProductId(Long productId);
+
+    void deleteAllByProductId(Long productId);
 }

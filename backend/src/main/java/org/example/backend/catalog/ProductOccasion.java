@@ -17,6 +17,11 @@ public class ProductOccasion {
 
     protected ProductOccasion() {}
 
+    public ProductOccasion(Long productId, String occasion) {
+        this.productId = productId;
+        this.occasion = occasion;
+    }
+
     public Long getProductId() { return productId; }
     public String getOccasion() { return occasion; }
 }

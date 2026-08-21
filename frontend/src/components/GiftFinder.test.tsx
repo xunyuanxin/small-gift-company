@@ -5,6 +5,7 @@ import { ThemeProvider } from '@mui/material'
 import theme from '../theme'
 import { GiftFinder } from './GiftFinder'
 import * as generatedBundlesApi from '../api/generatedBundles'
+import * as analyticsApi from '../api/analytics'
 import type { GeneratedBundleResponse } from '../types/catalog'
 
 afterEach(() => {
@@ -227,6 +228,19 @@ describe('GiftFinder — recommendation navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
     await waitFor(() => expect(screen.getByRole('alert')).toBeInTheDocument())
     expect(screen.getByRole('alert')).toHaveTextContent(/something went wrong/i)
+  })
+
+  it('fires FINDER_COMPLETED analytics event after successful bundle generation', async () => {
+    vi.spyOn(generatedBundlesApi, 'generateBundle').mockResolvedValue(GENERATED_BUNDLE_STUB)
+    const trackSpy = vi.spyOn(analyticsApi, 'trackEvent').mockResolvedValue(undefined)
+    renderFinder()
+    fireEvent.click(screen.getByText('6–8'))
+    fireEvent.click(screen.getByText('🎵 Pop Music'))
+    fireEvent.click(screen.getByRole('button', { name: /ready, set, gift/i }))
+    await waitFor(() => expect(screen.getByTestId('configurator-page')).toBeInTheDocument())
+    expect(trackSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ eventType: 'FINDER_COMPLETED', bundleId: 'gb_test123456' })
+    )
   })
 
   it('defaults audiencePreference and partyType; slider at max maps to HIGH tier', async () => {

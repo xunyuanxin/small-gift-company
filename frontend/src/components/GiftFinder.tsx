@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { trackEvent } from '../api/analytics'
 import {
   Box, Button, Chip, CircularProgress, Slider, Stack, Typography,
 } from '@mui/material'
@@ -152,6 +153,7 @@ export function GiftFinder() {
         maxRetailPrice:     maxPrice >= PRICE_MAX ? null : maxPrice,
       })
       navigate(`/bundleCustomization/${response.generatedBundleId}`)
+      trackEvent({ eventType: 'FINDER_COMPLETED', bundleId: response.generatedBundleId })
     } catch {
       setSubmitError('Something went wrong. Please try again.')
     } finally {
