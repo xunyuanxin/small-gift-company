@@ -40,7 +40,7 @@ class GeneratedBundleControllerIntegrationTest {
 
     private static final String BASE_URL = "/api/generated-bundles";
 
-    /** Valid request body targeting GENERAL_4_ITEM (age=8, CELEBRATION, POP_MUSIC, LOW budget). */
+    /** Unconstrained request — no retail price ceiling (slider at max). */
     private String validGeneralRequest() {
         return """
                 {
@@ -49,6 +49,20 @@ class GeneratedBundleControllerIntegrationTest {
                   "interest": "POP_MUSIC",
                   "partyType": "CELEBRATION",
                   "budgetTierCode": "LOW"
+                }
+                """;
+    }
+
+    /** Constrained request — retail price ceiling of $5.00. */
+    private String constrainedRequest() {
+        return """
+                {
+                  "age": 8,
+                  "audiencePreference": "NO_PREFERENCE",
+                  "interest": "POP_MUSIC",
+                  "partyType": "CELEBRATION",
+                  "budgetTierCode": "LOW",
+                  "maxRetailPrice": 5.00
                 }
                 """;
     }
@@ -101,18 +115,22 @@ class GeneratedBundleControllerIntegrationTest {
     }
 
     @Test
-    void post_validRequest_cogsSnapshotWithinBudget() throws Exception {
+    void post_constrainedRequest_retailPriceWithinCeiling() throws Exception {
+        // PATH 2: when maxRetailPrice is set, slot item retail total must stay within the ceiling
+        // (upgrade reserve is subtracted first, then slot items are chosen within remaining budget).
         MvcResult result = mockMvc.perform(post(BASE_URL)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(validGeneralRequest()))
+                        .content(constrainedRequest()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
         String body = result.getResponse().getContentAsString();
         com.jayway.jsonpath.DocumentContext ctx = com.jayway.jsonpath.JsonPath.parse(body);
-        double cogs = ctx.read("$.standardItemCogsSnapshot", Double.class);
+        double bundleRetailPrice = ctx.read("$.bundleRetailPrice", Double.class);
 
-        assertThat(cogs).isLessThanOrEqualTo(2.50);
+        // bundleRetailPrice is the sum of slot item retail prices.
+        // Combined with the standard upgrade (if any) it must not exceed the 5.00 ceiling.
+        assertThat(bundleRetailPrice).isLessThanOrEqualTo(5.00);
     }
 
     // ── GET: happy path ────────────────────────────────────────────────────────

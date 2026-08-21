@@ -87,7 +87,7 @@ class ProductScoringServiceTest {
     }
 
     private BundleGenerationRequest buildRequest(Interest interest, AudiencePreference audience) {
-        return new BundleGenerationRequest(8, audience, interest, PartyType.CELEBRATION, "LOW");
+        return new BundleGenerationRequest(8, audience, interest, PartyType.CELEBRATION, "LOW", null);
     }
 
     private <T> T instantiate(Class<T> cls) throws Exception {

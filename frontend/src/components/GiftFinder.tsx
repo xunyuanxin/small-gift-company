@@ -1,11 +1,24 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Chip, CircularProgress, Stack, Typography,
+  Box, Button, Chip, CircularProgress, Slider, Stack, Typography,
 } from '@mui/material'
 import { generateBundle } from '../api/generatedBundles'
 import type { Interest, AudiencePreference, PartyType, BudgetTierCode } from '../types/catalog'
 import { COLORS } from '../theme'
+
+// ── Price slider bounds (computed from actual total bundle retail prices) ─────
+// Min: 4 × $0.50 cheapest items + $0.50 standard upgrade = $2.50  → floor $3
+// Max: 4 most expensive STANDARD items ($9.83) + PREMIUM upgrade ($10.00) ≈ $20
+
+const PRICE_MIN = 3
+const PRICE_MAX = 20
+
+function priceToTier(max: number): BudgetTierCode {
+  if (max <= 8)  return 'LOW'
+  if (max <= 15) return 'MID'
+  return 'HIGH'
+}
 
 // ── Option definitions ───────────────────────────────────────────────────────
 
@@ -32,12 +45,6 @@ const AUDIENCE_OPTIONS: { value: AudiencePreference; label: string }[] = [
 const PARTY_OPTIONS: { value: PartyType; label: string }[] = [
   { value: 'CELEBRATION', label: '🎉 Celebration' },
   { value: 'HALLOWEEN',   label: '🎃 Halloween'   },
-]
-
-const BUDGET_OPTIONS: { value: BudgetTierCode; label: string }[] = [
-  { value: 'LOW',  label: 'Budget-Friendly' },
-  { value: 'MID',  label: 'Mid-Range'       },
-  { value: 'HIGH', label: 'Premium'         },
 ]
 
 // ── Shared chip row ──────────────────────────────────────────────────────────
@@ -96,7 +103,7 @@ interface SavedSelections {
   interest:          Interest | null
   audiencePreference: AudiencePreference | null
   partyType:         PartyType | null
-  budgetTierCode:    BudgetTierCode | null
+  maxPrice:          number
 }
 
 function loadSelections(): SavedSelections {
@@ -104,7 +111,7 @@ function loadSelections(): SavedSelections {
     const raw = sessionStorage.getItem(SESSION_KEY)
     if (raw) return JSON.parse(raw) as SavedSelections
   } catch { /* ignore */ }
-  return { age: null, interest: null, audiencePreference: null, partyType: null, budgetTierCode: null }
+  return { age: null, interest: null, audiencePreference: null, partyType: null, maxPrice: PRICE_MAX }
 }
 
 function saveSelections(s: SavedSelections) {
@@ -121,7 +128,7 @@ export function GiftFinder() {
   const [interest,           setInterest]           = useState<Interest | null>(saved.interest)
   const [audiencePreference, setAudiencePreference] = useState<AudiencePreference | null>(saved.audiencePreference)
   const [partyType,          setPartyType]          = useState<PartyType | null>(saved.partyType)
-  const [budgetTierCode,     setBudgetTierCode]     = useState<BudgetTierCode | null>(saved.budgetTierCode)
+  const [maxPrice,           setMaxPrice]           = useState<number>(saved.maxPrice ?? PRICE_MAX)
   const [submitting,         setSubmitting]         = useState(false)
   const [submitError,        setSubmitError]        = useState<string | null>(null)
 
@@ -131,7 +138,7 @@ export function GiftFinder() {
       return
     }
 
-    saveSelections({ age, interest, audiencePreference, partyType, budgetTierCode })
+    saveSelections({ age, interest, audiencePreference, partyType, maxPrice })
 
     setSubmitting(true)
     setSubmitError(null)
@@ -141,7 +148,8 @@ export function GiftFinder() {
         interest,
         audiencePreference: audiencePreference ?? 'NO_PREFERENCE',
         partyType:          partyType          ?? 'CELEBRATION',
-        budgetTierCode:     budgetTierCode     ?? 'MID',
+        budgetTierCode:     priceToTier(maxPrice),
+        maxRetailPrice:     maxPrice >= PRICE_MAX ? null : maxPrice,
       })
       navigate(`/bundleCustomization/${response.generatedBundleId}`)
     } catch {
@@ -152,16 +160,16 @@ export function GiftFinder() {
   }
 
   const hasAnySelection = age !== null || interest !== null || audiencePreference !== null
-    || partyType !== null || budgetTierCode !== null
+    || partyType !== null || maxPrice < PRICE_MAX
 
   function handleClearAll() {
     setAge(null)
     setInterest(null)
     setAudiencePreference(null)
     setPartyType(null)
-    setBudgetTierCode(null)
+    setMaxPrice(PRICE_MAX)
     setSubmitError(null)
-    saveSelections({ age: null, interest: null, audiencePreference: null, partyType: null, budgetTierCode: null })
+    saveSelections({ age: null, interest: null, audiencePreference: null, partyType: null, maxPrice: PRICE_MAX })
   }
 
   return (
@@ -174,7 +182,7 @@ export function GiftFinder() {
       }}
     >
       <Box sx={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', mb: 0.5 }}>
-        <Typography variant="h6" component="h2">
+        <Typography variant="h6" component="h2" sx={{ color: COLORS.charcoal }}>
           Let's find their favorites ✨
         </Typography>
         {hasAnySelection && (
@@ -215,8 +223,54 @@ export function GiftFinder() {
       <SectionLabel>④ What's the celebration?</SectionLabel>
       <ChipRow options={PARTY_OPTIONS} selected={partyType} onSelect={setPartyType} />
 
-      <SectionLabel>⑤ Budget?</SectionLabel>
-      <ChipRow options={BUDGET_OPTIONS} selected={budgetTierCode} onSelect={setBudgetTierCode} />
+      <SectionLabel>⑤ Budget per guest?</SectionLabel>
+      <Box sx={{ px: 1.5, pt: 0.5, pb: 0, display: 'flex', alignItems: 'center', gap: 1.5 }}>
+        <Typography
+          component="span"
+          sx={{ color: COLORS.muted, fontSize: '0.75rem', whiteSpace: 'nowrap', flexShrink: 0 }}
+        >
+          up to
+        </Typography>
+        {/* Relative wrapper — floating price label sits above the thumb */}
+        <Box sx={{ position: 'relative', flex: 1, pt: '22px', pl: 1.5 }}>
+          <Typography
+            component="span"
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: `${((maxPrice - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100}%`,
+              transform: 'translateX(-50%)',
+              color: COLORS.muted,
+              fontSize: '0.72rem',
+              whiteSpace: 'nowrap',
+              pointerEvents: 'none',
+              userSelect: 'none',
+              lineHeight: 1,
+            }}
+          >
+            ${maxPrice}
+          </Typography>
+          <Slider
+            value={maxPrice}
+            min={PRICE_MIN}
+            max={PRICE_MAX}
+            step={1}
+            onChange={(_, val) => setMaxPrice(val as number)}
+            valueLabelDisplay="off"
+            aria-label="Max budget per guest"
+            sx={{
+              color: COLORS.coral,
+              '& .MuiSlider-thumb': {
+                width: 14,
+                height: 14,
+                '&:hover, &.Mui-focusVisible': { boxShadow: '0 0 0 6px rgba(244,127,107,0.16)' },
+              },
+              '& .MuiSlider-track': { height: 4 },
+              '& .MuiSlider-rail':  { height: 4, opacity: 0.25 },
+            }}
+          />
+        </Box>
+      </Box>
 
       {submitError && (
         <Typography

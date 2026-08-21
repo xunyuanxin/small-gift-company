@@ -12,6 +12,7 @@ export interface BundleGenerationRequest {
   interest: Interest
   partyType: PartyType
   budgetTierCode: BudgetTierCode
+  maxRetailPrice: number | null
 }
 
 export interface GeneratedBundleItemDto {
