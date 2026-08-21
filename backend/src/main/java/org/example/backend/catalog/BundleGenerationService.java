@@ -161,22 +161,16 @@ public class BundleGenerationService {
 
         } else {
             // ── PATH 2/3: Constrained ─────────────────────────────────────────────
-            // Phase A: Find the best-scoring STANDARD and PREMIUM upgrades from the
-            // eligible pool to calculate how much retail budget to reserve for upgrades.
+            // Phase A: Find the best-scoring STANDARD upgrade to reserve its retail
+            // price from the ceiling.  Premium is NOT reserved here — it is an
+            // explicit opt-in that can exceed the ceiling.
             Optional<Product> reserveStd = eligible.stream()
                     .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
                     .max(Comparator.comparingInt(p ->
                             interestScore(p.getId(), request.interest(), interestByProduct)));
 
-            Optional<Product> reservePrem = eligible.stream()
-                    .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
-                    .filter(p -> reserveStd.map(s -> !s.getId().equals(p.getId())).orElse(true))
-                    .max(Comparator.comparingInt(p ->
-                            interestScore(p.getId(), request.interest(), interestByProduct)));
-
-            // Phase B: Slot budget = ceiling − upgrade reserve
-            BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO)
-                    .add(reservePrem.map(Product::getRetailPrice).orElse(BigDecimal.ZERO));
+            // Phase B: Slot budget = ceiling − standard upgrade reserve only
+            BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO);
             BigDecimal slotBudget = request.maxRetailPrice().subtract(upgradeReserve);
 
             // If the upgrade reserve already exceeds the ceiling, give all budget to slots
@@ -278,10 +272,10 @@ public class BundleGenerationService {
             upgradeSelection = upgradeGenerationService.selectUpgrades(
                     eligible, selectedIds, request, interestByProduct);
         } else {
-            // PATH 2: STANDARD = closest to ceiling; PREMIUM = cheapest from eligible pool
+            // PATH 2: STANDARD = closest to ceiling; PREMIUM = highest interest score, then cheapest
             BigDecimal remainingForUpgrades = request.maxRetailPrice().subtract(baseRetailPrice);
             upgradeSelection = upgradeGenerationService.selectUpgradesForCeilingPath(
-                    eligible, selectedIds, remainingForUpgrades);
+                    eligible, selectedIds, remainingForUpgrades, request.interest(), interestByProduct);
         }
 
         // 8. Select default gift bag

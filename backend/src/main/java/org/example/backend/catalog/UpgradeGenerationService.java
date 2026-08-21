@@ -84,13 +84,17 @@ public class UpgradeGenerationService {
     /**
      * Ceiling-optimization variant for the constrained path:
      * - Standard: from eligible STANDARD (not selected), retail ≤ remaining, pick the one
-     *   with the highest retail price (brings total closest to the ceiling).
-     * - Premium: from eligible PREMIUM (not selected), pick the cheapest.
+     *   with the highest retail price (brings 4 basic items + standard closest to ceiling).
+     * - Premium: from eligible PREMIUM (not selected), pick by highest interest score first,
+     *   then cheapest as tiebreaker (best relevance at lowest opt-in cost).
+     *   Premium is an explicit opt-in and is NOT bounded by the ceiling.
      */
     public UpgradeSelection selectUpgradesForCeilingPath(
             List<Product> eligible,
             Set<Long> selectedIds,
-            BigDecimal remaining) {
+            BigDecimal remaining,
+            Interest interest,
+            Map<Long, List<ProductInterestAffinity>> interestByProduct) {
 
         Optional<Product> standardOpt = eligible.stream()
                 .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
@@ -100,11 +104,13 @@ public class UpgradeGenerationService {
 
         final Long standardId = standardOpt.map(Product::getId).orElse(null);
 
+        // Highest interest score first; cheapest as tiebreaker
         Optional<Product> premiumOpt = eligible.stream()
                 .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
                 .filter(p -> !selectedIds.contains(p.getId()))
                 .filter(p -> standardId == null || !p.getId().equals(standardId))
-                .min(Comparator.comparing(Product::getRetailPrice));
+                .max(Comparator.comparingInt((Product p) -> interestScore(p.getId(), interest, interestByProduct))
+                        .thenComparing(Comparator.comparing(Product::getRetailPrice).reversed()));
 
         return new UpgradeSelection(standardOpt, premiumOpt);
     }
