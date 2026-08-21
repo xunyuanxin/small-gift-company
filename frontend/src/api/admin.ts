@@ -77,6 +77,18 @@ export interface AdminDashboard {
   bundleViews: number
 }
 
+export interface ProductCoverage {
+  productId: number
+  name: string
+  appearanceCount: number
+  totalCombinations: number
+  agesCovered: string[]
+  audiencesCovered: string[]
+  partyTypesCovered: string[]
+  interestsCovered: string[]
+  budgetsCovered: string[]
+}
+
 export interface ProductAffinities {
   interestWeights: Record<string, number>
   audienceWeights: Record<string, number>
@@ -108,6 +120,9 @@ export const adminApi = {
 
   getDashboard: (auth: string) =>
     adminRequest<AdminDashboard>('/admin/api/dashboard/', auth),
+
+  getProductCoverage: (auth: string) =>
+    adminRequest<ProductCoverage[]>('/admin/api/dashboard/product-coverage', auth),
 
   getAffinities: (auth: string, id: number) =>
     adminRequest<ProductAffinities>(`/admin/api/products/${id}/affinities`, auth),

@@ -85,9 +85,8 @@ public class UpgradeGenerationService {
      * Ceiling-optimization variant for the constrained path:
      * - Standard: from eligible STANDARD (not selected), retail ≤ remaining, pick by highest
      *   interest score first, then cheapest as tiebreaker. Its price determines the slot budget.
-     * - Premium: from eligible PREMIUM (not selected), must be priced above standard, pick by
-     *   highest interest score first, then cheapest as tiebreaker (lowest opt-in cost).
-     *   Premium is an explicit opt-in and is NOT bounded by the ceiling.
+     * - Premium: from eligible PREMIUM (not selected), retail ≤ remaining (keeps 4 basics + premium
+     *   within ceiling), must be priced above standard. Pick the most expensive (closest to ceiling).
      */
     public UpgradeSelection selectUpgradesForCeilingPath(
             List<Product> eligible,
@@ -106,15 +105,16 @@ public class UpgradeGenerationService {
         final Long standardId = standardOpt.map(Product::getId).orElse(null);
         final BigDecimal standardPrice = standardOpt.map(Product::getRetailPrice).orElse(null);
 
-        // Highest interest score first; cheapest as tiebreaker.
-        // Premium must be strictly more expensive than standard so the delta is always positive.
+        // Most expensive premium that keeps (4 basic items + premium) within the ceiling.
+        // "remaining" = ceiling − 4 basic items, so the price cap is retailPrice ≤ remaining.
+        // Premium must also be strictly more expensive than standard so the delta is always positive.
         Optional<Product> premiumOpt = eligible.stream()
                 .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
                 .filter(p -> !selectedIds.contains(p.getId()))
                 .filter(p -> standardId == null || !p.getId().equals(standardId))
                 .filter(p -> standardPrice == null || p.getRetailPrice().compareTo(standardPrice) > 0)
-                .max(Comparator.comparingInt((Product p) -> interestScore(p.getId(), interest, interestByProduct))
-                        .thenComparing(Comparator.comparing(Product::getRetailPrice).reversed()));
+                .filter(p -> p.getRetailPrice().compareTo(remaining) <= 0)
+                .max(Comparator.comparing(Product::getRetailPrice));
 
         return new UpgradeSelection(standardOpt, premiumOpt);
     }

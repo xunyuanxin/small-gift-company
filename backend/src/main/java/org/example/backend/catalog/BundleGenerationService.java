@@ -120,6 +120,19 @@ public class BundleGenerationService {
                         request.partyType(), occasionsByProduct))
                 .toList();
 
+        // 5b. Hard audience filter: remove items incompatible with the gender preference.
+        //     MASCULINE     → keep MASCULINE or UNIVERSAL (products with no affinity are neutral).
+        //     FEMININE      → keep FEMININE  or UNIVERSAL.
+        //     NO_PREFERENCE → keep UNIVERSAL only (drop FEMININE-only and MASCULINE-only items).
+        //     Applied to both the preference-filtered eligible pool AND the broader allActive pool
+        //     used by the PATH 3 per-slot fallback, so gender is always the first hard filter.
+        eligible = eligible.stream()
+                .filter(p -> eligibilityService.isAudienceCompatible(p.getId(), request.audiencePreference(), audienceByProduct))
+                .toList();
+        final List<Product> allActiveAudienceCompatible = allActive.stream()
+                .filter(p -> eligibilityService.isAudienceCompatible(p.getId(), request.audiencePreference(), audienceByProduct))
+                .toList();
+
         if (eligible.isEmpty()) {
             throw new BundleGenerationException(
                     BundleGenerationException.FailureCode.NO_ELIGIBLE_PRODUCTS,
@@ -195,9 +208,10 @@ public class BundleGenerationService {
                         .toList();
 
                 // PATH 3 per-slot fallback: drop preference filters, use all active STANDARD
+                //   (audience filter still applies via allActiveAudienceCompatible)
                 final boolean usedFallback;
                 if (candidates.isEmpty()) {
-                    candidates = allActive.stream()
+                    candidates = allActiveAudienceCompatible.stream()
                             .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
                             .filter(p -> !selectedIds.contains(p.getId()))
                             .filter(p -> p.getRetailPrice().compareTo(currentRemaining) <= 0)
@@ -231,8 +245,9 @@ public class BundleGenerationService {
                         .toList();
 
                 // Feasibility pool: eligible for normal path, all active STANDARD for fallback
+                //   (audience filter already applied in allActiveAudienceCompatible)
                 List<Product> feasibilityPool = usedFallback
-                        ? allActive.stream().filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD).toList()
+                        ? allActiveAudienceCompatible.stream().filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD).toList()
                         : eligible;
 
                 // Find first feasible choice
