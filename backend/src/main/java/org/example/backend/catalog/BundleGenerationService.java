@@ -166,8 +166,9 @@ public class BundleGenerationService {
             // explicit opt-in that can exceed the ceiling.
             Optional<Product> reserveStd = eligible.stream()
                     .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
-                    .max(Comparator.comparingInt(p ->
-                            interestScore(p.getId(), request.interest(), interestByProduct)));
+                    .max(Comparator.comparingInt((Product p) ->
+                                    interestScore(p.getId(), request.interest(), interestByProduct))
+                            .thenComparing(Comparator.comparing(Product::getRetailPrice).reversed()));
 
             // Phase B: Slot budget = ceiling − standard upgrade reserve only
             BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO);
@@ -272,7 +273,7 @@ public class BundleGenerationService {
             upgradeSelection = upgradeGenerationService.selectUpgrades(
                     eligible, selectedIds, request, interestByProduct);
         } else {
-            // PATH 2: STANDARD = closest to ceiling; PREMIUM = highest interest score, then cheapest
+            // PATH 2: STANDARD = highest interest score, then cheapest; PREMIUM = highest interest score, then cheapest
             BigDecimal remainingForUpgrades = request.maxRetailPrice().subtract(baseRetailPrice);
             upgradeSelection = upgradeGenerationService.selectUpgradesForCeilingPath(
                     eligible, selectedIds, remainingForUpgrades, request.interest(), interestByProduct);

@@ -158,7 +158,7 @@ export function BundleCustomizationPage() {
   return (
     <Box sx={{ backgroundColor: C.bg, minHeight: '100vh' }}>
 
-      {/* ── Sticky top bar: Back + price ─────────────────────────────────── */}
+      {/* ── Sticky top bar: Back + per-bag price ────────────────────────── */}
       <Box
         sx={{
           position: 'sticky',
@@ -182,13 +182,14 @@ export function BundleCustomizationPage() {
         </Button>
 
         {bundle.bundleRetailPrice != null && (
-          <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 1 }}>
-            <Typography sx={{ color: C.meta, fontSize: '0.85rem' }}>
-              Price per guest
-            </Typography>
-            <Typography sx={{ color: C.accent, fontWeight: 700, fontSize: '1.1rem' }}>
-              ${displayPrice.toFixed(2)}
-            </Typography>
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            <Box sx={{ display: 'flex', alignItems: 'baseline', gap: 0.5 }}>
+              <Typography sx={{ color: C.accent, fontWeight: 700, fontSize: '1.1rem' }}>
+                ${displayPrice.toFixed(2)}
+              </Typography>
+              <Typography sx={{ color: C.meta, fontSize: '0.85rem' }}>/ bag</Typography>
+            </Box>
+            <Typography sx={{ color: C.meta, fontSize: '0.72rem' }}>One bag per guest</Typography>
           </Box>
         )}
       </Box>
@@ -225,6 +226,11 @@ export function BundleCustomizationPage() {
               }}
             >
               {bundleDisplayName(bundle.templateCode)}
+            </Typography>
+
+            {/* ── Party context ───────────────────────────────────────────── */}
+            <Typography sx={{ color: C.meta, fontSize: '0.875rem', mt: 0.5, mb: 0 }}>
+              Built for {quantity} guest{quantity !== 1 ? 's' : ''} · {quantity} complete bag{quantity !== 1 ? 's' : ''}
             </Typography>
 
             {/* ── Included section ────────────────────────────────────────── */}
@@ -330,17 +336,19 @@ export function BundleCustomizationPage() {
             zIndex: 100,
             mx: { xs: -2, sm: -3 },
             px: { xs: 2, sm: 3 },
-            py: 1,
+            py: 1.5,
             backgroundColor: '#FFFFFF',
             borderTop: '1px solid #E5E5EA',
             display: 'flex',
             alignItems: 'center',
-            gap: 2,
+            gap: { xs: 2, sm: 3 },
           }}
         >
-          {/* ── Quantity + total price (left) ────────────────────────────── */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
-            <Typography sx={{ color: C.meta, fontSize: '0.85rem' }}>Qty</Typography>
+          {/* ── Party size selector (left) ───────────────────────────────── */}
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.25, flexShrink: 0 }}>
+            <Typography sx={{ color: C.meta, fontSize: '0.7rem', fontWeight: 600, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              Party Size
+            </Typography>
             <Select
               value={quantity}
               onChange={(e) => setQuantity(Number(e.target.value))}
@@ -353,25 +361,36 @@ export function BundleCustomizationPage() {
                 '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: C.accent },
                 '&.Mui-focused .MuiOutlinedInput-notchedOutline': { borderColor: C.accent },
                 borderRadius: '10px',
-                minWidth: 72,
+                minWidth: 88,
               }}
             >
               {Array.from({ length: 20 }, (_, i) => i + 1).map((n) => (
-                <MenuItem key={n} value={n} sx={{ fontSize: '0.95rem' }}>{n}</MenuItem>
+                <MenuItem key={n} value={n} sx={{ fontSize: '0.95rem' }}>{n} bag{n !== 1 ? 's' : ''}</MenuItem>
               ))}
             </Select>
-            <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-              <Typography sx={{ color: C.accent, fontWeight: 700, fontSize: '1.1rem', lineHeight: 1.2 }}>
-                ${totalPrice.toFixed(2)}
+          </Box>
+
+          {/* ── Order breakdown (center) ─────────────────────────────────── */}
+          <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 0.15 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography sx={{ color: C.meta, fontSize: '0.8rem' }}>
+                {quantity} bag{quantity !== 1 ? 's' : ''} × ${displayPrice.toFixed(2)}
               </Typography>
-              <Typography sx={{ color: C.meta, fontSize: '0.75rem' }}>
-                incl. ${shipping.toFixed(2)} shipping
+              <Typography sx={{ color: C.text, fontSize: '0.85rem', fontWeight: 600 }}>
+                ${(displayPrice * quantity).toFixed(2)}
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <Typography sx={{ color: C.meta, fontSize: '0.8rem' }}>Shipping</Typography>
+              <Typography sx={{ color: C.meta, fontSize: '0.8rem' }}>${shipping.toFixed(2)}</Typography>
+            </Box>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', mt: 0.25 }}>
+              <Typography sx={{ color: '#143C78', fontSize: '0.85rem', fontWeight: 700 }}>Party Total</Typography>
+              <Typography sx={{ color: '#143C78', fontSize: '1rem', fontWeight: 700 }}>
+                ${totalPrice.toFixed(2)}
               </Typography>
             </Box>
           </Box>
-
-          {/* ── Spacer ───────────────────────────────────────────────────── */}
-          <Box sx={{ flex: 1 }} />
 
           {/* ── CTA ──────────────────────────────────────────────────────── */}
           {continued ? (
@@ -390,14 +409,15 @@ export function BundleCustomizationPage() {
               sx={{
                 backgroundColor: C.accent,
                 '&:hover': { backgroundColor: '#e06b57' },
-                fontSize: '1rem',
+                fontSize: { xs: '0.85rem', sm: '1rem' },
                 py: 1,
                 minHeight: 52,
-                px: 4,
+                px: { xs: 2, sm: 3 },
                 flexShrink: 0,
+                whiteSpace: 'nowrap',
               }}
             >
-              Continue with This Bag
+              Continue with {quantity} Party Bag{quantity !== 1 ? 's' : ''} →
             </Button>
           )}
         </Box>
