@@ -8,4 +8,8 @@ public interface ProductRoleAffinityRepository
         extends JpaRepository<ProductRoleAffinity, ProductRoleAffinityId> {
 
     List<ProductRoleAffinity> findAllByProductIdIn(Collection<Long> productIds);
+
+    List<ProductRoleAffinity> findAllByProductId(Long productId);
+
+    void deleteAllByProductId(Long productId);
 }

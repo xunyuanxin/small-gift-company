@@ -20,6 +20,12 @@ public class ProductRoleAffinity {
 
     protected ProductRoleAffinity() {}
 
+    public ProductRoleAffinity(Long productId, String role, short weight) {
+        this.productId = productId;
+        this.role = role;
+        this.weight = weight;
+    }
+
     public Long getProductId() { return productId; }
     public String getRole() { return role; }
     public short getWeight() { return weight; }

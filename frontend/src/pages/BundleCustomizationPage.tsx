@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import {
   Box, Button, Container, Grid2, MenuItem, Select, Stack, Typography,
 } from '@mui/material'
 import ArrowBackIcon from '@mui/icons-material/ArrowBack'
 import { getGeneratedBundle } from '../api/generatedBundles'
+import { trackEvent } from '../api/analytics'
 import type { GeneratedBundleResponse, GeneratedBundleItemDto } from '../types/catalog'
 import { ConfiguratorVisual } from '../components/ConfiguratorVisual'
 import { IncludedItemCard }   from '../components/IncludedItemCard'
@@ -33,6 +34,8 @@ export function BundleCustomizationPage() {
   const { bundleId } = useParams<{ bundleId: string }>()
   const navigate     = useNavigate()
 
+  const viewTracked = useRef(false)
+
   const [bundle,    setBundle]    = useState<GeneratedBundleResponse | null>(null)
   const [loading,   setLoading]   = useState(true)
   const [error,     setError]     = useState<string | null>(null)
@@ -53,6 +56,10 @@ export function BundleCustomizationPage() {
         if (!cancelled) {
           setBundle(b)
           setGiftBagOptionId(b.giftBag?.code ?? 'classic')
+          if (!viewTracked.current) {
+            viewTracked.current = true
+            trackEvent({ eventType: 'BUNDLE_VIEWED', bundleId: bundleId ?? undefined })
+          }
         }
       })
       .catch((e: { message?: string }) => {

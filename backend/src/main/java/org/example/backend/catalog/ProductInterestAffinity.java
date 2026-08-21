@@ -20,6 +20,12 @@ public class ProductInterestAffinity {
 
     protected ProductInterestAffinity() {}
 
+    public ProductInterestAffinity(Long productId, String interest, short weight) {
+        this.productId = productId;
+        this.interest = interest;
+        this.weight = weight;
+    }
+
     public Long getProductId() { return productId; }
     public String getInterest() { return interest; }
     public short getWeight() { return weight; }

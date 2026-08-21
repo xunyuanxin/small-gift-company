@@ -1,6 +1,8 @@
 package org.example.backend.catalog;
 
 import jakarta.persistence.*;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import java.math.BigDecimal;
 import java.time.Instant;
 
@@ -69,7 +71,7 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    protected Product() {}
+    public Product() {}
 
     public Long getId()                    { return id; }
     public String getSku()                 { return sku; }
@@ -90,4 +92,33 @@ public class Product {
     public String getThemeCode()           { return themeCode; }
     public Instant getCreatedAt()          { return createdAt; }
     public Instant getUpdatedAt()          { return updatedAt; }
+
+    public void setInventoryQuantity(int inventoryQuantity) { this.inventoryQuantity = inventoryQuantity; }
+    public void setActive(boolean active) { this.active = active; }
+
+    public void setSku(String sku)                       { this.sku = sku; }
+    public void setName(String name)                     { this.name = name; }
+    public void setDescription(String description)       { this.description = description; }
+    public void setImageUrl(String imageUrl)             { this.imageUrl = imageUrl; }
+    public void setCost(BigDecimal cost)                 { this.cost = cost; }
+    public void setCogOverhead(BigDecimal cogOverhead)   { this.cogOverhead = cogOverhead; }
+    public void setCogAdjusted(BigDecimal cogAdjusted)   { this.cogAdjusted = cogAdjusted; }
+    public void setRetailPrice(BigDecimal retailPrice)   { this.retailPrice = retailPrice; }
+    public void setMinAge(short minAge)                  { this.minAge = minAge; }
+    public void setMaxAge(short maxAge)                  { this.maxAge = maxAge; }
+    public void setCategory(ProductCategory category)    { this.category = category; }
+    public void setFormFactor(FormFactor formFactor)     { this.formFactor = formFactor; }
+    public void setUpgradeTier(UpgradeTier upgradeTier)  { this.upgradeTier = upgradeTier; }
+    public void setThemeCode(String themeCode)           { this.themeCode = themeCode; }
+
+    @PrePersist
+    void onCreate() {
+        if (createdAt == null) createdAt = Instant.now();
+        updatedAt = Instant.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = Instant.now();
+    }
 }
