@@ -46,7 +46,7 @@ describe('GiftFinder — layout', () => {
     expect(screen.getByText(/what are they into/i)).toBeInTheDocument()
     expect(screen.getByText(/girl or boy/i)).toBeInTheDocument()
     expect(screen.getByText(/what's the celebration/i)).toBeInTheDocument()
-    expect(screen.getByText('⑤ Budget?')).toBeInTheDocument()
+    expect(screen.getByText('⑤ Budget per guest?')).toBeInTheDocument()
   })
 
   it('renders the panel title', () => {
@@ -83,11 +83,15 @@ describe('GiftFinder — layout', () => {
     expect(screen.getByText('🎃 Halloween')).toBeInTheDocument()
   })
 
-  it('renders budget chip options', () => {
+  it('renders budget price slider', () => {
     renderFinder()
-    expect(screen.getByText('Budget-Friendly')).toBeInTheDocument()
-    expect(screen.getByText('Mid-Range')).toBeInTheDocument()
-    expect(screen.getByText('Premium')).toBeInTheDocument()
+    expect(screen.getByRole('slider', { name: /max budget per guest/i })).toBeInTheDocument()
+  })
+
+  it('budget slider shows "up to" label and floating value', () => {
+    renderFinder()
+    expect(screen.getByText('up to')).toBeInTheDocument()
+    expect(screen.getByText('$20')).toBeInTheDocument()
   })
 
   it('renders submit button', () => {
@@ -146,12 +150,11 @@ describe('GiftFinder — chip selection', () => {
     expect(screen.getByText('🎃 Halloween')).toBeInTheDocument()
   })
 
-  it('budget chip is single-select', () => {
+  it('budget slider value can be changed', () => {
     renderFinder()
-    fireEvent.click(screen.getByText('Budget-Friendly'))
-    fireEvent.click(screen.getByText('Premium'))
-    expect(screen.getByText('Budget-Friendly')).toBeInTheDocument()
-    expect(screen.getByText('Premium')).toBeInTheDocument()
+    const slider = screen.getByRole('slider', { name: /max budget per guest/i })
+    fireEvent.change(slider, { target: { value: '10' } })
+    expect(slider).toBeInTheDocument()
   })
 })
 
@@ -226,7 +229,7 @@ describe('GiftFinder — recommendation navigation', () => {
     expect(screen.getByRole('alert')).toHaveTextContent(/something went wrong/i)
   })
 
-  it('defaults audiencePreference, partyType, and budgetTierCode when not selected', async () => {
+  it('defaults audiencePreference and partyType; slider at max maps to HIGH tier', async () => {
     const spy = vi.spyOn(generatedBundlesApi, 'generateBundle').mockResolvedValue(GENERATED_BUNDLE_STUB)
     renderFinder()
     fireEvent.click(screen.getByText('6–8'))
@@ -240,7 +243,8 @@ describe('GiftFinder — recommendation navigation', () => {
       interest: 'POP_MUSIC',
       audiencePreference: 'NO_PREFERENCE',
       partyType: 'CELEBRATION',
-      budgetTierCode: 'MID',
+      budgetTierCode: 'HIGH',
+      maxRetailPrice: null,
     })
   })
 })

@@ -52,6 +52,25 @@ public class BundleGenerationService {
 
     /**
      * Generates and persists a complete bundle snapshot atomically.
+     *
+     * Three selection paths:
+     *
+     * PATH 1 — Unconstrained (maxRetailPrice == null, slider at max):
+     *   Pick the highest-scoring eligible product for each slot with no budget ceiling.
+     *   Upgrades: highest-scoring STANDARD + highest-scoring PREMIUM from the eligible pool.
+     *
+     * PATH 2 — Constrained (maxRetailPrice != null, slider below max):
+     *   Phase A: Identify the best STANDARD and PREMIUM upgrade candidates from the eligible
+     *            pool (by interest score) and reserve their retail prices.
+     *   Phase B: Greedy slot selection within (maxRetailPrice − upgradeReserve), using the
+     *            preference-filtered eligible pool.  Per-slot fallback to all active STANDARD
+     *            products if no preference-filtered candidate fits the remaining budget.
+     *   Phase C: Final upgrade selection — STANDARD chosen to bring total closest to ceiling
+     *            (highest retail ≤ remaining); PREMIUM chosen as the cheapest available.
+     *
+     * PATH 3 — Tight (fallback within PATH 2):
+     *   Triggered per-slot when no eligible product fits even after reserving upgrade budget.
+     *   Falls back to all active STANDARD products for that slot (drops preference filters).
      */
     @Transactional
     public GeneratedBundle generate(BundleGenerationRequest request) {
@@ -66,7 +85,6 @@ public class BundleGenerationService {
 
         // Eagerly initialize slots (EAGER fetch on allowedRoles is set on BundleTemplateSlot)
         List<BundleTemplateSlot> slots = template.getSlots();
-        // Force initialization of allowedRoles for each slot
         slots.forEach(s -> s.getAllowedRoles().size());
 
         // 3. Load all active products
@@ -96,7 +114,7 @@ public class BundleGenerationService {
         Map<Long, List<ProductRoleAffinity>> roleByProduct = allRoleAffinities.stream()
                 .collect(Collectors.groupingBy(ProductRoleAffinity::getProductId));
 
-        // 5. Filter eligible products
+        // 5. Filter eligible products (age + party type)
         List<Product> eligible = allActive.stream()
                 .filter(p -> eligibilityService.isEligible(p, request.age(),
                         request.partyType(), occasionsByProduct))
@@ -108,76 +126,163 @@ public class BundleGenerationService {
                     "No eligible products for request");
         }
 
-        // 6. Greedy slot-based selection (pure in-memory — no DB writes yet)
-        BigDecimal remainingCogs = budgetTier.getMaxItemCogs();
+        // 6. Slot selection — branches on whether a retail price ceiling is set
+        final boolean isConstrained = request.maxRetailPrice() != null;
+
         Set<Long> selectedIds = new HashSet<>();
-        // selectedProducts in slot order — used to build items after COGS is known
         List<SlotSelection> slotSelections = new ArrayList<>();
 
-        for (int slotIdx = 0; slotIdx < slots.size(); slotIdx++) {
-            BundleTemplateSlot slot = slots.get(slotIdx);
-            final BigDecimal currentRemaining = remainingCogs;
+        if (!isConstrained) {
+            // ── PATH 1: Unconstrained ─────────────────────────────────────────────
+            // No budget ceiling: pick the highest-scoring eligible product per slot.
+            for (BundleTemplateSlot slot : slots) {
+                List<Product> candidates = eligible.stream()
+                        .filter(p -> !selectedIds.contains(p.getId()))
+                        .filter(p -> hasAnyRole(p.getId(), slot.getAllowedRoles(), roleByProduct))
+                        .toList();
 
-            List<BundleTemplateSlot> remainingSlots = slots.subList(slotIdx + 1, slots.size());
-
-            // Candidates: eligible, not yet selected, within budget, has any allowed role
-            List<Product> candidates = eligible.stream()
-                    .filter(p -> !selectedIds.contains(p.getId()))
-                    .filter(p -> p.getCost().compareTo(currentRemaining) <= 0)
-                    .filter(p -> hasAnyRole(p.getId(), slot.getAllowedRoles(), roleByProduct))
-                    .toList();
-
-            if (candidates.isEmpty()) {
-                throw new BundleGenerationException(
-                        BundleGenerationException.FailureCode.INSUFFICIENT_ROLE_COVERAGE,
-                        "No candidates for slot: " + slot.getSlotCode());
-            }
-
-            // Score descending
-            List<Product> scored = candidates.stream()
-                    .sorted((a, b) -> {
-                        int scoreA = scoringService.score(a, slot, request,
-                                interestByProduct.getOrDefault(a.getId(), List.of()),
-                                audienceByProduct.getOrDefault(a.getId(), List.of()),
-                                roleByProduct.getOrDefault(a.getId(), List.of()));
-                        int scoreB = scoringService.score(b, slot, request,
-                                interestByProduct.getOrDefault(b.getId(), List.of()),
-                                audienceByProduct.getOrDefault(b.getId(), List.of()),
-                                roleByProduct.getOrDefault(b.getId(), List.of()));
-                        return Integer.compare(scoreB, scoreA);
-                    })
-                    .toList();
-
-            // Find first feasible choice
-            Product chosen = null;
-            for (Product candidate : scored) {
-                BigDecimal afterChoice = currentRemaining.subtract(candidate.getCost());
-                if (isFeasible(afterChoice, remainingSlots, eligible, selectedIds,
-                        candidate.getId(), roleByProduct)) {
-                    chosen = candidate;
-                    break;
+                if (candidates.isEmpty()) {
+                    throw new BundleGenerationException(
+                            BundleGenerationException.FailureCode.INSUFFICIENT_ROLE_COVERAGE,
+                            "No candidates for slot: " + slot.getSlotCode());
                 }
+
+                final BundleTemplateSlot currentSlot = slot;
+                Product chosen = candidates.stream()
+                        .max(Comparator.comparingInt(p -> scoringService.score(p, currentSlot, request,
+                                interestByProduct.getOrDefault(p.getId(), List.of()),
+                                audienceByProduct.getOrDefault(p.getId(), List.of()),
+                                roleByProduct.getOrDefault(p.getId(), List.of()))))
+                        .orElseThrow();
+
+                slotSelections.add(new SlotSelection(slot, chosen));
+                selectedIds.add(chosen.getId());
             }
 
-            if (chosen == null) {
-                throw new BundleGenerationException(
-                        BundleGenerationException.FailureCode.NO_BUDGET_FEASIBLE,
-                        "Cannot satisfy budget constraint for slot: " + slot.getSlotCode());
+        } else {
+            // ── PATH 2/3: Constrained ─────────────────────────────────────────────
+            // Phase A: Find the best-scoring STANDARD and PREMIUM upgrades from the
+            // eligible pool to calculate how much retail budget to reserve for upgrades.
+            Optional<Product> reserveStd = eligible.stream()
+                    .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
+                    .max(Comparator.comparingInt(p ->
+                            interestScore(p.getId(), request.interest(), interestByProduct)));
+
+            Optional<Product> reservePrem = eligible.stream()
+                    .filter(p -> p.getUpgradeTier() == UpgradeTier.PREMIUM)
+                    .filter(p -> reserveStd.map(s -> !s.getId().equals(p.getId())).orElse(true))
+                    .max(Comparator.comparingInt(p ->
+                            interestScore(p.getId(), request.interest(), interestByProduct)));
+
+            // Phase B: Slot budget = ceiling − upgrade reserve
+            BigDecimal upgradeReserve = reserveStd.map(Product::getRetailPrice).orElse(BigDecimal.ZERO)
+                    .add(reservePrem.map(Product::getRetailPrice).orElse(BigDecimal.ZERO));
+            BigDecimal slotBudget = request.maxRetailPrice().subtract(upgradeReserve);
+
+            // If the upgrade reserve already exceeds the ceiling, give all budget to slots
+            // (no upgrade reserve); the per-slot fallback will handle the tight scenario.
+            if (slotBudget.compareTo(BigDecimal.ZERO) <= 0) {
+                slotBudget = request.maxRetailPrice();
             }
 
-            slotSelections.add(new SlotSelection(slot, chosen));
-            selectedIds.add(chosen.getId());
-            remainingCogs = remainingCogs.subtract(chosen.getCost());
+            BigDecimal remainingBudget = slotBudget;
+
+            for (int slotIdx = 0; slotIdx < slots.size(); slotIdx++) {
+                BundleTemplateSlot slot = slots.get(slotIdx);
+                final BigDecimal currentRemaining = remainingBudget;
+                List<BundleTemplateSlot> remainingSlots = slots.subList(slotIdx + 1, slots.size());
+
+                // Preference-filtered candidates within remaining slot budget
+                List<Product> candidates = eligible.stream()
+                        .filter(p -> !selectedIds.contains(p.getId()))
+                        .filter(p -> p.getRetailPrice().compareTo(currentRemaining) <= 0)
+                        .filter(p -> hasAnyRole(p.getId(), slot.getAllowedRoles(), roleByProduct))
+                        .toList();
+
+                // PATH 3 per-slot fallback: drop preference filters, use all active STANDARD
+                final boolean usedFallback;
+                if (candidates.isEmpty()) {
+                    candidates = allActive.stream()
+                            .filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD)
+                            .filter(p -> !selectedIds.contains(p.getId()))
+                            .filter(p -> p.getRetailPrice().compareTo(currentRemaining) <= 0)
+                            .filter(p -> hasAnyRole(p.getId(), slot.getAllowedRoles(), roleByProduct))
+                            .toList();
+                    usedFallback = true;
+                } else {
+                    usedFallback = false;
+                }
+
+                if (candidates.isEmpty()) {
+                    throw new BundleGenerationException(
+                            BundleGenerationException.FailureCode.INSUFFICIENT_ROLE_COVERAGE,
+                            "No candidates for slot: " + slot.getSlotCode());
+                }
+
+                // Score descending (preference scoring still applied even in fallback)
+                final List<Product> finalCandidates = candidates;
+                List<Product> scored = finalCandidates.stream()
+                        .sorted((a, b) -> {
+                            int scoreA = scoringService.score(a, slot, request,
+                                    interestByProduct.getOrDefault(a.getId(), List.of()),
+                                    audienceByProduct.getOrDefault(a.getId(), List.of()),
+                                    roleByProduct.getOrDefault(a.getId(), List.of()));
+                            int scoreB = scoringService.score(b, slot, request,
+                                    interestByProduct.getOrDefault(b.getId(), List.of()),
+                                    audienceByProduct.getOrDefault(b.getId(), List.of()),
+                                    roleByProduct.getOrDefault(b.getId(), List.of()));
+                            return Integer.compare(scoreB, scoreA);
+                        })
+                        .toList();
+
+                // Feasibility pool: eligible for normal path, all active STANDARD for fallback
+                List<Product> feasibilityPool = usedFallback
+                        ? allActive.stream().filter(p -> p.getUpgradeTier() == UpgradeTier.STANDARD).toList()
+                        : eligible;
+
+                // Find first feasible choice
+                Product chosen = null;
+                for (Product candidate : scored) {
+                    BigDecimal costAfter = currentRemaining.subtract(candidate.getRetailPrice());
+                    if (isFeasible(costAfter, remainingSlots, feasibilityPool, selectedIds,
+                            candidate.getId(), roleByProduct)) {
+                        chosen = candidate;
+                        break;
+                    }
+                }
+
+                if (chosen == null) {
+                    throw new BundleGenerationException(
+                            BundleGenerationException.FailureCode.NO_BUDGET_FEASIBLE,
+                            "Cannot satisfy budget constraint for slot: " + slot.getSlotCode());
+                }
+
+                slotSelections.add(new SlotSelection(slot, chosen));
+                selectedIds.add(chosen.getId());
+                remainingBudget = remainingBudget.subtract(chosen.getRetailPrice());
+            }
         }
 
-        // Calculate total COGS
+        // Calculate total COGS and base retail price
         BigDecimal totalCogs = slotSelections.stream()
                 .map(s -> s.product().getCost())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal baseRetailPrice = slotSelections.stream()
+                .map(s -> s.product().getRetailPrice())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 7. Select upgrades (standard + premium)
-        UpgradeGenerationService.UpgradeSelection upgradeSelection = upgradeGenerationService.selectUpgrades(
-                eligible, selectedIds, request, interestByProduct);
+        // 7. Select upgrades
+        UpgradeGenerationService.UpgradeSelection upgradeSelection;
+        if (!isConstrained) {
+            // PATH 1: highest-scoring STANDARD + PREMIUM from eligible pool
+            upgradeSelection = upgradeGenerationService.selectUpgrades(
+                    eligible, selectedIds, request, interestByProduct);
+        } else {
+            // PATH 2: STANDARD = closest to ceiling; PREMIUM = cheapest from eligible pool
+            BigDecimal remainingForUpgrades = request.maxRetailPrice().subtract(baseRetailPrice);
+            upgradeSelection = upgradeGenerationService.selectUpgradesForCeilingPath(
+                    eligible, selectedIds, remainingForUpgrades);
+        }
 
         // 8. Select default gift bag
         GiftBagOption giftBagOption = giftBagOptionRepository.findByIsDefaultTrue()
@@ -198,10 +303,7 @@ public class BundleGenerationService {
                 totalCogs
         );
 
-        // Set base retail price = sum of selected item retail prices
-        BigDecimal baseRetailPrice = slotSelections.stream()
-                .map(s -> s.product().getRetailPrice())
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Set base retail price (computed above)
         bundle.setBaseRetailPrice(baseRetailPrice);
 
         // Save bundle first to get its PK
@@ -255,18 +357,25 @@ public class BundleGenerationService {
     }
 
     /**
-     * Feasibility check: after picking a candidate, can each remaining slot still be satisfied?
-     * For each remaining slot, at least one eligible product must exist that:
-     * - is not already selected (including the candidate just chosen)
-     * - has cost <= remaining budget after the candidate's cost
-     * - has any allowed role for that slot
-     *
-     * Note: we use a single shared remaining budget across all remaining slots (optimistic).
-     * This prevents the algorithm from running out of budget before all slots are filled.
+     * Returns the interest affinity weight for the given product and interest (0 if absent).
+     * Used to score upgrade candidates during budget reservation.
+     */
+    private int interestScore(Long productId, Interest interest,
+                               Map<Long, List<ProductInterestAffinity>> interestByProduct) {
+        return interestByProduct.getOrDefault(productId, List.of()).stream()
+                .filter(a -> a.getInterest().equals(interest.name()))
+                .mapToInt(ProductInterestAffinity::getWeight)
+                .findFirst()
+                .orElse(0);
+    }
+
+    /**
+     * Feasibility check: after picking a candidate, can each remaining slot still be satisfied
+     * within the remaining retail budget?
      */
     private boolean isFeasible(BigDecimal remainingAfterChoice,
                                 List<BundleTemplateSlot> remainingSlots,
-                                List<Product> eligible,
+                                List<Product> pool,
                                 Set<Long> currentSelectedIds,
                                 Long candidateId,
                                 Map<Long, List<ProductRoleAffinity>> roleByProduct) {
@@ -276,9 +385,9 @@ public class BundleGenerationService {
         for (BundleTemplateSlot remainingSlot : remainingSlots) {
             final Set<Long> takenIds = new HashSet<>(projectedSelected);
 
-            boolean anyFit = eligible.stream()
+            boolean anyFit = pool.stream()
                     .filter(p -> !takenIds.contains(p.getId()))
-                    .filter(p -> p.getCost().compareTo(remainingAfterChoice) <= 0)
+                    .filter(p -> p.getRetailPrice().compareTo(remainingAfterChoice) <= 0)
                     .anyMatch(p -> hasAnyRole(p.getId(), remainingSlot.getAllowedRoles(), roleByProduct));
 
             if (!anyFit) return false;

@@ -199,7 +199,7 @@ class BundleGenerationServiceTest {
 
     private BundleGenerationRequest defaultRequest() {
         return new BundleGenerationRequest(8, AudiencePreference.NO_PREFERENCE,
-                Interest.POP_MUSIC, PartyType.CELEBRATION, "LOW");
+                Interest.POP_MUSIC, PartyType.CELEBRATION, "LOW", null);
     }
 
     private void stubCommonMocks(GenerationSetup setup) {
@@ -305,7 +305,7 @@ class BundleGenerationServiceTest {
     @Test
     void generate_age4_selectsPreschoolTemplate() {
         BundleGenerationRequest request = new BundleGenerationRequest(
-                4, AudiencePreference.NO_PREFERENCE, Interest.TOYS_PLAY, PartyType.CELEBRATION, "LOW");
+                4, AudiencePreference.NO_PREFERENCE, Interest.TOYS_PLAY, PartyType.CELEBRATION, "LOW", null);
 
         BudgetTier budgetTier = buildBudgetTier(BigDecimal.valueOf(2.50));
         BundleTemplateSlot slotAct = buildSlot("ACTIVITY",   (short) 1, Set.of("ACTIVITY"));
@@ -354,7 +354,7 @@ class BundleGenerationServiceTest {
     @Test
     void generate_age8_readingPuzzleInterest_selectsReadingPuzzleTemplate() {
         BundleGenerationRequest request = new BundleGenerationRequest(
-                8, AudiencePreference.NO_PREFERENCE, Interest.READING_PUZZLE, PartyType.CELEBRATION, "LOW");
+                8, AudiencePreference.NO_PREFERENCE, Interest.READING_PUZZLE, PartyType.CELEBRATION, "LOW", null);
 
         BudgetTier budgetTier = buildBudgetTier(BigDecimal.valueOf(2.50));
         BundleTemplateSlot slotR = buildSlot("READING", (short) 1, Set.of("READING"));
